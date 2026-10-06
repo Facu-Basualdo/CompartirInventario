@@ -1,0 +1,16 @@
+{
+	"required": true,
+	"package": "com.inventariocompartido.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"EntityEquipmentAccessor",
+		"EntityEquipmentMixin",
+		"InventoryMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

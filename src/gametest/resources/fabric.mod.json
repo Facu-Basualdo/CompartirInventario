@@ -1,0 +1,15 @@
+{
+	"schemaVersion": 1,
+	"id": "inventariocompartido-test",
+	"version": "1.0.0",
+	"name": "Inventario Compartido - Tests",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-gametest": [
+			"com.inventariocompartido.test.SharedInventoryGameTest"
+		]
+	},
+	"depends": {
+		"inventariocompartido": "*"
+	}
+}

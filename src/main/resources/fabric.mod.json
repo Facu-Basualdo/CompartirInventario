@@ -1,0 +1,25 @@
+{
+	"schemaVersion": 1,
+	"id": "inventariocompartido",
+	"version": "${version}",
+	"name": "Inventario Compartido",
+	"description": "Todos los jugadores del servidor comparten un único inventario (inventario, barra rápida, armadura y mano secundaria) en tiempo real.",
+	"authors": [],
+	"license": "All-Rights-Reserved",
+	"icon": "assets/inventariocompartido/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.inventariocompartido.InventarioCompartido"
+		]
+	},
+	"mixins": [
+		"inventariocompartido.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
