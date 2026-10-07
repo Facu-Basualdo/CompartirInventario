@@ -12,12 +12,15 @@ Cuando un jugador entra, vanilla lee su archivo `playerdata/<uuid>.dat` y llama 
 |---|---|---|
 | `Inventory.load(TypedInputList<ItemStackWithSlot>)` | `Player.readAdditionalSaveData` | `items.clear()` y después `setItem` por cada ítem guardado |
 | `EntityEquipment.setAll(EntityEquipment)` | `LivingEntity.readAdditionalSaveData` | `items.clear()` + `items.putAll(otro.items)` |
+| `FoodData.readAdditionalSaveData(ValueInput)` | `Player.readAdditionalSaveData` | Pisa comida, saturación y agotamiento con los guardados |
 
-Como la lista y el mapa son los compartidos (ver [inventario compartido](inventario-compartido.md)), ese `clear()` borra lo que tiene el otro jugador conectado. Y lo que se carga son los datos personales de B, que pueden ser viejos.
+Como la lista, el mapa y el `FoodData` son los compartidos (ver [inventario compartido](inventario-compartido.md) y [vida y hambre](vida-y-hambre.md)), cada carga pisa lo que tiene el otro jugador conectado. Y lo que se carga son los datos personales de B, que pueden ser viejos.
 
 ## La regla
 
-**`InventoryMixin` cancela `load()` y `EntityEquipmentMixin` cancela `setAll()` cuando apuntan a la lista o al mapa compartidos y el estado ya está `initialized`.** Las dos usan `SharedInventoryState.shouldBlockLoadInto(storage)`, que compara por identidad (`==`) contra el estado activo.
+**`InventoryMixin` cancela `load()`, `EntityEquipmentMixin` cancela `setAll()` y `FoodDataMixin` cancela `readAdditionalSaveData()` cuando apuntan al objeto compartido y el estado ya está `initialized`.** Los tres usan `SharedInventoryState.shouldBlockLoadInto(storage)`, que compara por identidad (`==`) contra el estado activo.
+
+La vida guardada del jugador **sí** se carga (`setHealth` en `LivingEntity.readAdditionalSaveData`), pero da igual: el jugador todavía no está en la lista de jugadores, y en el primer tick adopta la vida compartida (ver [vida y hambre](vida-y-hambre.md)).
 
 Que el chequeo sea por identidad y no por "es un jugador" es lo que hace seguro bloquear `setAll`: cualquier otra entidad (un zombie, un armor stand) tiene su propio `EnumMap` y carga normal.
 
@@ -26,7 +29,7 @@ Que el chequeo sea por identidad y no por "es un jugador" es lo que hace seguro 
 Sin el flag, instalar el mod en un mundo existente arrancaría con el inventario compartido vacío y **todos perderían sus ítems**.
 
 1. Mundo con el mod recién instalado: `initialized = false`.
-2. Entra el primer jugador. `load()` y `setAll()` **no** se bloquean: sus ítems personales se cargan en la lista compartida.
+2. Entra el primer jugador. Las tres cargas **no** se bloquean: sus ítems y su hambre se cargan en lo compartido.
 3. Se dispara `ServerPlayConnectionEvents.JOIN` → `markInitialized()`. El flag se guarda con el estado (ver [persistencia](persistencia.md)).
 4. Desde ahí, todas las cargas se bloquean.
 

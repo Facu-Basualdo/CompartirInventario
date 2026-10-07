@@ -12,6 +12,8 @@ Extiende `SavedData` y se obtiene con `server.getDataStorage().computeIfAbsent(T
 |---|---|---|
 | `items` | `ItemStackWithSlot.CODEC.listOf()` | Sólo los slots no vacíos, con su índice. Al cargar se valida con `isValidInContainer`. |
 | `equipment` | `EntityEquipment.CODEC` | Un `EntityEquipment` real; el mapa compartido sale de su campo `items` por `EntityEquipmentAccessor`. El codec de vanilla ya descarta los stacks vacíos al codificar. |
+| `food` | `FOOD_CODEC` propio (`level`, `saturation`, `exhaustion`) | `FoodData` no tiene codec en vanilla. `exhaustionLevel` es privado: se lee y escribe con `FoodDataAccessor`. El timer de regeneración no se guarda. |
+| `health` | `Codec.FLOAT` | `-1` (`UNKNOWN_HEALTH`) = nadie la fijó o murió el grupo. Ver [vida y hambre](vida-y-hambre.md). |
 | `initialized` | `Codec.BOOL` | Ver la migración en [carga de datos del jugador](carga-de-datos-del-jugador.md#migración-el-flag-initialized). |
 
 ## Gotchas
@@ -20,7 +22,9 @@ Extiende `SavedData` y se obtiene con `server.getDataStorage().computeIfAbsent(T
 
 **`DataFixTypes` va en `null` y eso sólo funciona con Fabric API.** `SavedDataStorage.readTagFromDisk` de vanilla llama a `dataFixType.update(...)` sin chequear null. `fabric-object-builder-api-v1` tiene un `SavedDataStorageMixin` (`handleNullDataFixType`) que lo evita. **Si algún día se saca la dependencia de Fabric API, el mundo crashea al cargar.**
 
-**No uses objetos mutables como default en un codec.** La primera versión usaba `optionalFieldOf("equipment", new EntityEquipment())`. Ese default se crea **una sola vez** al armar el codec, así que dos mundos sin el campo (en singleplayer, en la misma sesión) habrían compartido el mismo `EntityEquipment`. Hoy es `optionalFieldOf("equipment")` + `orElseGet(EntityEquipment::new)`.
+**No uses objetos mutables como default en un codec.** La primera versión usaba `optionalFieldOf("equipment", new EntityEquipment())`. Ese default se crea **una sola vez** al armar el codec, así que dos mundos sin el campo (en singleplayer, en la misma sesión) habrían compartido el mismo `EntityEquipment`. Hoy es `optionalFieldOf("equipment")` + `orElseGet(EntityEquipment::new)`, y lo mismo para `food`.
+
+**`syncedHealth` no se guarda.** Es un `IdentityHashMap<ServerPlayer, Float>` con la vida de cada jugador en el último reparto. Al reiniciar el servidor arranca vacío y los que entran adoptan `health`.
 
 ## Estado activo estático
 

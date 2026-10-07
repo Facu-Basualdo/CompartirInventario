@@ -2,17 +2,23 @@
 
 [← Índice Mod](INDICE.md)
 
-**Si muere un jugador, los dos pierden todo**, porque es un único inventario. No es un bug: es la semántica de "compartir". Con `/gamerule keepInventory true` no se pierde nada.
+**Si muere un jugador, mueren todos y se pierde todo**, porque es una sola vida y un solo inventario. No es un bug: es la semántica de "compartir". Con `/gamerule keepInventory true` no se pierden los ítems, pero igual mueren todos.
 
 ## Muerte
 
-`Player.dropEquipment` → (si no hay `keepInventory`) `Inventory.dropAll()`. Ese método recorre la lista compartida, tira cada stack al mundo, pone `ItemStack.EMPTY` en cada slot y termina con `equipment.dropAll(player)` para la armadura y la mano secundaria.
+El que recibe el golpe final muere en el momento, por el camino normal de vanilla. Los demás mueren **al final de ese tick**, cuando `SharedVitals` ve que la vida compartida llegó a 0 y les hace `setHealth(0)` + `die()` (detalle en [vida y hambre](vida-y-hambre.md#muerte-del-grupo)). Cada uno ve su pantalla de muerte y reaparece por su cuenta.
 
-Como la lista queda vacía en el mismo paso en que se tiran los ítems, **cada ítem cae una sola vez**: no hay duplicación. El otro jugador queda con el inventario vacío en el siguiente tick.
+Ítems: `Player.dropEquipment` → (si no hay `keepInventory`) `Inventory.dropAll()`. Ese método recorre la lista compartida, tira cada stack al mundo, pone `ItemStack.EMPTY` en cada slot y termina con `equipment.dropAll(player)` para la armadura y la mano secundaria.
+
+Como la lista queda vacía en el mismo paso en que se tiran los ítems, **cada ítem cae una sola vez**, al lado del primero que murió. Cuando los demás mueren, el inventario ya está vacío y no tiran nada. Sí tiran su propia experiencia, que no se comparte.
+
+Hambre: se reinicia a 20 de comida y 5 de saturación cuando muere el grupo, porque el `FoodData` compartido no se recrea con el jugador como en vanilla.
 
 ## Respawn
 
-Reaparecer (morir, o salir del End por el portal) **crea un `ServerPlayer` nuevo** con `PlayerList.respawn`. Ese jugador construye un `Inventory` nuevo, y `InventoryMixin` lo vuelve a conectar a las listas compartidas en el constructor. No hace falta ningún hook específico de respawn.
+Reaparecer (morir, o salir del End por el portal) **crea un `ServerPlayer` nuevo** con `PlayerList.respawn`. Ese jugador construye un `Inventory` nuevo, y `InventoryMixin` lo vuelve a conectar a las listas compartidas en el constructor. `PlayerMixin` hace lo mismo con el `FoodData`. No hace falta ningún hook específico de respawn.
+
+Vida: el jugador nuevo no está en `syncedHealth`, así que en el siguiente tick **adopta** la vida compartida. El primero en reaparecer después de una muerte grupal aporta la suya (20), porque la vida compartida quedó en `UNKNOWN_HEALTH`. Los que reaparecen después adoptan lo que haya, aunque el primero ya haya recibido daño.
 
 Después vanilla llama a `ServerPlayer.restoreFrom(viejo, keepEverything)`:
 
@@ -26,5 +32,6 @@ Después vanilla llama a `ServerPlayer.restoreFrom(viejo, keepEverything)`:
 ## Ver también
 
 - [Inventario compartido](inventario-compartido.md): por qué el constructor alcanza.
-- [Tests: jugadores de prueba](../tests/jugadores-de-prueba.md): por qué el test usa `die()` y no `kill()`.
+- [Vida y hambre](vida-y-hambre.md): cómo se detecta la muerte del grupo.
+- [Tests: jugadores de prueba](../tests/jugadores-de-prueba.md): por qué el test usa `setHealth(0)` + `die()` y no `kill()`.
 - [Tests: inventario compartido](../tests/inventario-compartido.md)

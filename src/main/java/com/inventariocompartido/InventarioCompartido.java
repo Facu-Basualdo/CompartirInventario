@@ -2,6 +2,7 @@ package com.inventariocompartido;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 
 import net.minecraft.resources.Identifier;
@@ -20,6 +21,9 @@ public class InventarioCompartido implements ModInitializer {
 		// como punto de partida. A partir de ahí, el inventario compartido es la única fuente de verdad.
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
 				SharedInventoryState.get(server).markInitialized());
+
+		// La vida no se comparte por referencia: se reparte al final de cada tick.
+		ServerTickEvents.END_SERVER_TICK.register(SharedVitals::syncHealth);
 
 		// En singleplayer se pueden abrir varios mundos en la misma sesión: no arrastrar el estado de uno a otro.
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> SharedInventoryState.clearActive());

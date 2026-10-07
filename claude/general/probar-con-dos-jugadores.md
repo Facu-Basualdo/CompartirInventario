@@ -31,8 +31,13 @@ El test automático ([tests: inventario compartido](../tests/inventario-comparti
 - Que lo que agarra uno aparezca en el otro **sin abrir y cerrar el inventario**.
 - Abrir un cofre en un cliente mientras el otro agarra ítems: el inventario de abajo del cofre también tiene que actualizarse.
 - Ponerse armadura en uno: el otro la ve puesta en su pantalla de inventario y en el modelo.
+- **Los dos en supervivencia**: en creativo no se comparten vida ni hambre (`/gamemode survival <jugador>` si hace falta).
+- Que un mob le pegue a uno: la barra de corazones del otro baja en el mismo momento (puede haber un tick de diferencia).
+- Correr con uno hasta que baje el hambre: la barra del otro baja igual. Comer con uno la llena para los dos.
+- Morir con uno: el otro muere también, y los ítems caen una sola vez al lado del primero.
 
 ## Ver también
 
 - [Entorno Java y Gradle](entorno-java-gradle.md)
 - [Inventario compartido](../mod/inventario-compartido.md)
+- [Vida y hambre](../mod/vida-y-hambre.md)

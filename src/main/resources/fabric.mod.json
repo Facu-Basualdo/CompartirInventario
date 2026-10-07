@@ -3,7 +3,7 @@
 	"id": "inventariocompartido",
 	"version": "${version}",
 	"name": "Inventario Compartido",
-	"description": "Todos los jugadores del servidor comparten un único inventario (inventario, barra rápida, armadura y mano secundaria) en tiempo real.",
+	"description": "Todos los jugadores del servidor comparten un único inventario (inventario, barra rápida, armadura y mano secundaria), el hambre y la vida en tiempo real.",
 	"authors": [],
 	"license": "All-Rights-Reserved",
 	"icon": "assets/inventariocompartido/icon.png",

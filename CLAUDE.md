@@ -1,6 +1,6 @@
 # Inventario Compartido — mod de Minecraft
 
-Mod de Fabric para **Minecraft Java 26.3** que hace que todos los jugadores del servidor compartan un único inventario (inventario, barra rápida, armadura y mano secundaria) en tiempo real. Java 25, Gradle 9.7 + Fabric Loom 1.18, Fabric Loader 0.19.5, Fabric API 0.162.0+26.3. Toda la lógica corre en el servidor.
+Mod de Fabric para **Minecraft Java 26.3** que hace que todos los jugadores del servidor compartan en tiempo real un único inventario (inventario, barra rápida, armadura y mano secundaria), una sola barra de hambre y una sola barra de vida. Java 25, Gradle 9.7 + Fabric Loom 1.18, Fabric Loader 0.19.5, Fabric API 0.162.0+26.3. Toda la lógica corre en el servidor.
 
 ## Cómo obtener contexto
 
@@ -36,8 +36,9 @@ El mismo tema en distintas áreas usa el mismo nombre de archivo (`claude/mod/in
 | Feature | Mod | Tests |
 |---|---|---|
 | Inventario compartido (listas, armadura, sync) | [inventario-compartido](claude/mod/inventario-compartido.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
+| Vida y hambre compartidas | [vida-y-hambre](claude/mod/vida-y-hambre.md) | [inventario-compartido](claude/tests/inventario-compartido.md) · [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
 | Carga de datos del jugador sin pisar lo compartido | [carga-de-datos-del-jugador](claude/mod/carga-de-datos-del-jugador.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
-| Muerte y respawn | [muerte-y-respawn](claude/mod/muerte-y-respawn.md) | [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
+| Muerte grupal y respawn | [muerte-y-respawn](claude/mod/muerte-y-respawn.md) | [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
 
 ## Reglas de workflow
 

@@ -48,6 +48,7 @@ No hay emparejamiento: **es un único inventario para todo el servidor.** Un ter
 
 ## Ver también
 
+- [Vida y hambre](vida-y-hambre.md): el hambre usa el mismo truco de referencia; la vida no puede.
 - [Carga de datos del jugador](carga-de-datos-del-jugador.md): por qué hay que bloquear `load()` y `setAll()`.
 - [Muerte y respawn](muerte-y-respawn.md): qué pasa cuando se crea un `ServerPlayer` nuevo.
 - [Persistencia](persistencia.md): dónde vive la lista compartida.

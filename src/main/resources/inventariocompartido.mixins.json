@@ -5,7 +5,10 @@
 	"mixins": [
 		"EntityEquipmentAccessor",
 		"EntityEquipmentMixin",
-		"InventoryMixin"
+		"FoodDataAccessor",
+		"FoodDataMixin",
+		"InventoryMixin",
+		"PlayerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

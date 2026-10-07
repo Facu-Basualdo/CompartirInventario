@@ -2,30 +2,39 @@
 
 [← Índice Tests](INDICE.md)
 
-Síntoma con el que se descubrió: el test llamaba a `kill()` y el jugador **seguía vivo**, con el inventario intacto.
+Síntomas con los que se descubrió: `kill()` dejaba al jugador vivo, y la vida compartida no se sincronizaba nunca aunque el test pasara a los jugadores a supervivencia.
 
-## `makeMockServerPlayerInLevel()`
+## No uses `makeMockServerPlayerInLevel()`
 
-Crea un `ServerPlayer` con un `GameProfile` aleatorio y una `Connection` sobre un `EmbeddedChannel` de Netty, y lo pasa por **`PlayerList.placeNewPlayer` real**. O sea:
+`GameTestHelper.makeMockServerPlayerInLevel()` crea una subclase anónima de `ServerPlayer` (`GameTestHelper$3`) que **sobreescribe `gameMode()` para devolver siempre `CREATIVE`**. `setGameMode(SURVIVAL)` no cambia nada. En creativo no se comparten vida ni hambre (ver [vida y hambre](../mod/vida-y-hambre.md#quién-participa)), así que con esos jugadores el test de vida no puede pasar. Además, el método está marcado `@Deprecated(forRemoval = true)`.
 
-- se dispara `ServerPlayConnectionEvents.JOIN` (y por lo tanto `markInitialized()`);
-- se intenta cargar su `playerdata` (no tiene, así que `load()` no se llama);
-- aparece en el chat: "test-mock-player joined the game".
+**Usá `joinSurvivalPlayer(helper, nombre)` del test.** Hace lo mismo que el helper de vanilla, pero con un `ServerPlayer` común:
 
-**Está marcado `@Deprecated(forRemoval = true)`.** Compila con warning. Cuando lo saquen, hay que buscar el reemplazo en `GameTestHelper` con `javap` (ver [minecraft-26-sin-ofuscar](../general/minecraft-26-sin-ofuscar.md)).
+1. `CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), nombre), false)`
+2. `new ServerPlayer(server, level, cookie.gameProfile(), cookie.clientInformation())`
+3. `new Connection(PacketFlow.SERVERBOUND)` envuelta en un `EmbeddedChannel` de Netty
+4. `playerList.placeNewPlayer(connection, player, cookie)`, el login **real**: dispara `ServerPlayConnectionEvents.JOIN` e intenta cargar su `playerdata`
+5. `setGameMode(GameType.SURVIVAL)`
 
 **Quedan conectados al terminar el test**: hay que sacarlos con `playerList.remove(jugador)`.
 
-## Las dos trampas
+## Son invulnerables
 
-| Trampa | Por qué | Qué hacer |
-|---|---|---|
-| Arrancan en **creativo** | Observado en el servidor de tests (`gameMode()` devolvía `CREATIVE`) | `setGameMode(GameType.SURVIVAL)` si el test depende del modo |
-| Son **invulnerables** | `ServerPlayer.isInvulnerableTo` devuelve `true` mientras `!connection.hasClientLoaded()`, y el cliente falso nunca manda el aviso de "terminé de cargar" | **Para probar la muerte llamá a `die(damageSources().genericKill())`**, no a `kill()` ni a `hurtServer()` |
+`ServerPlayer.isInvulnerableTo` devuelve `true` mientras `!connection.hasClientLoaded()`, y el cliente falso nunca manda el aviso de "terminé de cargar". Por eso `kill()` y `hurtServer()` no hacen nada.
+
+| Para probar… | Hacé |
+|---|---|
+| Daño o curación | `setHealth(x)` / `heal(x)`: no pasan por la invulnerabilidad |
+| Muerte | **`setHealth(0)` y después `die(damageSources().genericKill())`**. Las dos cosas: el reparto de vida detecta la muerte por `getHealth()`, no por `die()` |
 
 `die()` es el punto que importa para el mod (dispara `dropEquipment` → `Inventory.dropAll()`), así que saltear el daño no le quita valor al test.
+
+## Cargar un guardado en otro jugador
+
+Para simular "B entra con datos viejos" el test guarda a A con `saveWithoutId` y lo carga en B con `load`. **Sacá `"UUID"` del `CompoundTag` antes de cargarlo**: si no, B queda con el UUID de A, y `PlayerList` (que indexa por UUID) se confunde en los pasos siguientes.
 
 ## Ver también
 
 - [Tests: inventario compartido](inventario-compartido.md)
 - [Muerte y respawn](../mod/muerte-y-respawn.md)
+- [Vida y hambre](../mod/vida-y-hambre.md)
