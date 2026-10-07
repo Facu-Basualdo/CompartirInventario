@@ -42,6 +42,7 @@ En orden, sobre dos jugadores A y B en supervivencia:
 - **Que `FoodData.tick()` corra una sola vez por tick.** No hay aserción sobre la velocidad de regeneración.
 - **El primer jugador tras instalar el mod** (con `initialized = false`, sus ítems pasan a ser los compartidos). Cuando corre el test, A y B ya marcaron el estado como inicializado.
 - **El caso sin lugar para el cofre** (ítems tirados a los pies).
+- **Que el cofre quede en disco.** El guardado forzado (`saveAllChunks`) se verificó a mano pasando `suppressLog = false`: aparecen los "Saving chunks for level…" justo después del log del cofre. Ninguna aserción lo comprueba.
 - **El guardado y la recarga del `.dat` entre reinicios.** El archivo se escribe (en `build/run/gameTest/world/data/inventariocompartido/`), pero ningún test reinicia el servidor y lo lee.
 
 ## Ver también

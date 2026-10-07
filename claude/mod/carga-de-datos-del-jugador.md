@@ -58,7 +58,11 @@ Dos cofres simples puestos uno al lado del otro no se unen en uno doble: `ChestB
 
 **Los ítems rescatados viven en memoria (`rescuedItems`) entre la carga y el JOIN, que son parte del mismo login.** Si el servidor se cae en ese intervalo no se pierde nada: el archivo del jugador todavía no se volvió a guardar (sigue sin la marca y con sus ítems), y el próximo login los rescata de nuevo. En el autosave, el archivo del jugador y el chunk del cofre se guardan juntos.
 
-**Hueco conocido:** si el jugador se desconecta (su archivo se guarda con la marca) y el servidor se cae antes del siguiente guardado del mundo, el chunk vuelve a la versión sin cofre y esos ítems se pierden. Para cerrarlo habría que guardar el chunk o el mundo al poner el cofre.
+**Después de poner el cofre se fuerza un guardado: `server.saveAllChunks(true, true, false)`**, lo mismo que `/save-all flush`. Sin eso había un hueco: el jugador se desconecta (su archivo se guarda con la marca), el servidor se cae antes del siguiente autosave, el chunk vuelve a la versión sin cofre y los ítems se pierden. `saveAllChunks` escribe cada mundo (chunks y entidades, así que también los ítems tirados si no hubo lugar) **antes** que `level.dat`, y con `flush = true` espera a que termine la escritura. Para cuando existe algún guardado del jugador con la marca, el cofre ya está en disco.
+
+- **Pasa una sola vez por jugador**, en su primer login después de instalar el mod. En un mundo grande puede trabar el servidor un instante.
+- **`force = false` respeta `/save-off`.** Si un admin desactivó el guardado, el cofre no se fuerza a disco y el hueco vuelve a existir. Es decisión del admin.
+- En singleplayer, el archivo del anfitrión vive dentro de `level.dat`, que se escribe después de los chunks. El orden sigue sirviendo.
 
 **Limitación:** un mundo que ya usaba el mod antes de que existiera la marca (la versión del primer commit) tiene archivos sin marca con copias del compartido. En ese mundo, el primer login de cada jugador después de actualizar le daría un cofre con una copia, o sea ítems duplicados. Esa versión nunca se publicó.
 

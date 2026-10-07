@@ -57,6 +57,13 @@ public final class PersonalItemsChest {
 
 		InventarioCompartido.LOGGER.info("Ítems de antes del mod de {} devueltos en {} cofre(s){}",
 				player.getGameProfile().name(), chests.size(), dropped ? " y tirados a sus pies" : "");
+
+		// El próximo guardado del jugador lleva la marca y ya no vuelve a rescatar estos ítems. Si el cofre
+		// no estuviera en disco antes que eso, una caída del servidor lo borraría y los ítems se perderían.
+		// Es /save-all flush: escribe chunks y entidades (los ítems tirados) y espera a que terminen. Pasa
+		// una sola vez por jugador. force=false respeta /save-off.
+		player.level().getServer().saveAllChunks(true, true, false);
+
 		player.sendSystemMessage(Component.literal(message(chests, dropped)));
 	}
 
