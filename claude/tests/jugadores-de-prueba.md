@@ -16,6 +16,8 @@ Síntomas con los que se descubrió: `kill()` dejaba al jugador vivo, y la vida 
 4. `playerList.placeNewPlayer(connection, player, cookie)`, el login **real**: dispara `ServerPlayConnectionEvents.JOIN` e intenta cargar su `playerdata`
 5. `setGameMode(GameType.SURVIVAL)`
 
+**Para simular un jugador que ya tenía partida, usá `joinSurvivalPlayer(helper, nombre, archivo, pos)`.** Antes del paso 4 hace `player.load(archivo)`, igual que vanilla en el login (`placeNewPlayer` no carga el archivo: eso pasa antes), y ubica al jugador en `pos`. `placeNewPlayer` lo teletransporta a donde ya está, así que la posición se respeta. Ubicalo en el área del test, por ejemplo `helper.absolutePos(new BlockPos(1, 1, 1))`, que es aire: si queda enterrado, no hay lugar para cofres.
+
 **Quedan conectados al terminar el test**: hay que sacarlos con `playerList.remove(jugador)`.
 
 ## Son invulnerables

@@ -22,7 +22,7 @@ Lo que agarra uno le aparece al otro, si a uno le pegan les baja la vida a los d
 - **Creativo y espectador** comparten el inventario, pero no la vida ni el hambre.
 - **Muerte:** cuando muere uno, los demás mueren en el mismo instante. Los ítems caen una sola vez, al lado del primero, y el hambre vuelve a llenarse. Con `/gamerule keepInventory true` no se pierden los ítems, pero igual mueren todos.
 - **Todo se guarda en el mundo** (`world/data/inventariocompartido/shared_inventory.dat`), no en cada jugador. Si alguien se desconecta con poca vida, el que entre después arranca con esa vida.
-- **Mundo existente:** al instalar el mod en un mundo que ya tiene partida, el primer jugador que entra aporta sus ítems y su hambre. **Los ítems personales de los demás se descartan**, así que conviene guardarlos en un cofre antes de instalarlo.
+- **Mundo existente:** al instalar el mod en un mundo que ya tiene partida, el primer jugador que entra aporta sus ítems y su hambre al inventario compartido. **Los ítems de los demás no se pierden:** la primera vez que entra cada uno, le aparecen en un cofre a su lado y un mensaje en el chat le dice dónde está. Si no hay lugar para el cofre, quedan tirados a sus pies.
 
 ## Requisitos
 

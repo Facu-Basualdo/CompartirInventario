@@ -1,12 +1,16 @@
 package com.inventariocompartido.test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import com.mojang.authlib.GameProfile;
 import io.netty.channel.embedded.EmbeddedChannel;
+import org.jspecify.annotations.Nullable;
 
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
@@ -17,13 +21,16 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.ItemStackWithSlot;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityEquipment;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
 
@@ -36,6 +43,7 @@ public class SharedInventoryGameTest {
 		ServerPlayer a = joinSurvivalPlayer(helper, "jugador-a");
 		ServerPlayer b = joinSurvivalPlayer(helper, "jugador-b");
 		ServerPlayer[] respawned = new ServerPlayer[1];
+		ServerPlayer[] veteran = new ServerPlayer[1];
 
 		helper.startSequence()
 				.thenExecute(() -> {
@@ -69,6 +77,37 @@ public class SharedInventoryGameTest {
 					helper.assertTrue(a.getFoodData() == b.getFoodData(), Component.literal("A y B usan el mismo FoodData"));
 					a.getFoodData().setFoodLevel(7);
 					assertFood(helper, b, 7, "B ve el hambre de A");
+
+					// Jugador con partida de antes del mod: sus ítems no entran al inventario compartido…
+					TagValueOutput personal = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, a.registryAccess());
+					personal.list("Inventory", ItemStackWithSlot.CODEC).add(new ItemStackWithSlot(0, new ItemStack(Items.GOLDEN_APPLE, 3)));
+					EntityEquipment personalEquipment = new EntityEquipment();
+					personalEquipment.set(EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
+					personal.store("equipment", EntityEquipment.CODEC, personalEquipment);
+					veteran[0] = joinSurvivalPlayer(helper, "jugador-c", personal.buildResult(), helper.absolutePos(new BlockPos(1, 1, 1)));
+					assertCount(helper, a, Items.GOLDEN_APPLE, 0, "Las manzanas de antes del mod no entran al inventario compartido");
+					helper.assertFalse(a.getItemBySlot(EquipmentSlot.FEET).is(Items.DIAMOND_BOOTS), Component.literal("Las botas de antes del mod no entran a la armadura compartida"));
+				})
+				.thenIdle(1)
+				.thenExecute(() -> {
+					// …sino a un cofre al lado suyo
+					ServerPlayer c = veteran[0];
+					helper.assertTrue(countChests(c) == 1, Component.literal("Aparece un cofre al lado del jugador (hay " + countChests(c) + ")"));
+					helper.assertTrue(countInChests(c, Items.GOLDEN_APPLE) == 3, Component.literal("El cofre tiene las 3 manzanas"));
+					helper.assertTrue(countInChests(c, Items.DIAMOND_BOOTS) == 1, Component.literal("El cofre tiene las botas"));
+
+					// Un archivo guardado con el mod ya tiene la marca: entrar de nuevo no crea otro cofre
+					TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, c.registryAccess());
+					c.saveWithoutId(output);
+					CompoundTag sharedSave = output.buildResult();
+					sharedSave.remove("UUID");
+					playerList.remove(c);
+					veteran[0] = joinSurvivalPlayer(helper, "jugador-c-otra-vez", sharedSave, helper.absolutePos(new BlockPos(1, 1, 1)));
+				})
+				.thenIdle(1)
+				.thenExecute(() -> {
+					helper.assertTrue(countChests(veteran[0]) == 1, Component.literal("Reingresar con un archivo marcado no crea otro cofre (hay " + countChests(veteran[0]) + ")"));
+					playerList.remove(veteran[0]);
 				})
 				.thenIdle(1)
 				.thenExecute(() -> a.setHealth(10))
@@ -122,14 +161,47 @@ public class SharedInventoryGameTest {
 	 * sobreescribe gameMode() para devolver siempre CREATIVE, y en creativo no se comparten vida ni hambre.
 	 */
 	private static ServerPlayer joinSurvivalPlayer(GameTestHelper helper, String name) {
+		return joinSurvivalPlayer(helper, name, null, null);
+	}
+
+	/** Igual, pero cargándole antes un archivo guardado (como hace vanilla en el login) y ubicándolo en pos. */
+	private static ServerPlayer joinSurvivalPlayer(GameTestHelper helper, String name, @Nullable CompoundTag savedData, @Nullable BlockPos pos) {
 		ServerLevel level = helper.getLevel();
 		CommonListenerCookie cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), name), false);
 		ServerPlayer player = new ServerPlayer(level.getServer(), level, cookie.gameProfile(), cookie.clientInformation());
+		if (savedData != null) {
+			player.load(TagValueInput.create(ProblemReporter.DISCARDING, player.registryAccess(), savedData));
+		}
+		if (pos != null) {
+			player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+		}
 		Connection connection = new Connection(PacketFlow.SERVERBOUND);
 		new EmbeddedChannel(connection);
 		level.getServer().getPlayerList().placeNewPlayer(connection, player, cookie);
 		player.setGameMode(GameType.SURVIVAL);
 		return player;
+	}
+
+	private static List<ChestBlockEntity> chestsAround(ServerPlayer player) {
+		List<ChestBlockEntity> chests = new ArrayList<>();
+		for (BlockPos pos : BlockPos.betweenClosed(player.blockPosition().offset(-3, -1, -3), player.blockPosition().offset(3, 2, 3))) {
+			if (player.level().getBlockEntity(pos) instanceof ChestBlockEntity chest) {
+				chests.add(chest);
+			}
+		}
+		return chests;
+	}
+
+	private static int countChests(ServerPlayer player) {
+		return chestsAround(player).size();
+	}
+
+	private static int countInChests(ServerPlayer player, Item item) {
+		int count = 0;
+		for (ChestBlockEntity chest : chestsAround(player)) {
+			count += chest.countItem(item);
+		}
+		return count;
 	}
 
 	private static void assertCount(GameTestHelper helper, Player player, Item item, int expected, String message) {

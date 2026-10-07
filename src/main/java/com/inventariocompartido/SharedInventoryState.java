@@ -2,10 +2,12 @@ package com.inventariocompartido;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import com.inventariocompartido.mixin.EntityEquipmentAccessor;
 import com.inventariocompartido.mixin.FoodDataAccessor;
@@ -75,6 +77,10 @@ public class SharedInventoryState extends SavedData {
 	// Vida de cada jugador justo después del último reparto. No se guarda: es por objeto ServerPlayer,
 	// y un jugador recién creado (login, respawn) no está acá hasta que adopta la vida compartida.
 	private final Map<ServerPlayer, Float> syncedHealth = new IdentityHashMap<>();
+
+	// Ítems de antes de instalar el mod, rescatados al cargar el archivo del jugador y pendientes de
+	// ponerse en un cofre cuando termine de entrar (ver PersonalItemsChest).
+	private final Map<UUID, List<ItemStack>> rescuedItems = new HashMap<>();
 
 	private SharedInventoryState() {
 		this(List.of(), new EntityEquipment(), new FoodData(), UNKNOWN_HEALTH, false);
@@ -155,8 +161,21 @@ public class SharedInventoryState extends SavedData {
 		return this.syncedHealth;
 	}
 
+	public boolean isInitialized() {
+		return this.initialized;
+	}
+
 	public void markInitialized() {
 		this.initialized = true;
+	}
+
+	public void addRescuedItems(UUID player, List<ItemStack> items) {
+		this.rescuedItems.computeIfAbsent(player, uuid -> new ArrayList<>()).addAll(items);
+	}
+
+	public List<ItemStack> takeRescuedItems(UUID player) {
+		List<ItemStack> items = this.rescuedItems.remove(player);
+		return items == null ? List.of() : items;
 	}
 
 	// Los ItemStack y el hambre se modifican directamente (al romper bloques, comer, correr) sin avisar

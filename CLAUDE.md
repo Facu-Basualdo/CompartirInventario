@@ -37,7 +37,7 @@ El mismo tema en distintas áreas usa el mismo nombre de archivo (`claude/mod/in
 |---|---|---|
 | Inventario compartido (listas, armadura, sync) | [inventario-compartido](claude/mod/inventario-compartido.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
 | Vida y hambre compartidas | [vida-y-hambre](claude/mod/vida-y-hambre.md) | [inventario-compartido](claude/tests/inventario-compartido.md) · [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
-| Carga de datos del jugador sin pisar lo compartido | [carga-de-datos-del-jugador](claude/mod/carga-de-datos-del-jugador.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
+| Carga de datos del jugador sin pisar lo compartido, y cofre con los ítems de antes del mod | [carga-de-datos-del-jugador](claude/mod/carga-de-datos-del-jugador.md) | [inventario-compartido](claude/tests/inventario-compartido.md) · [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
 | Muerte grupal y respawn | [muerte-y-respawn](claude/mod/muerte-y-respawn.md) | [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
 
 ## Reglas de workflow

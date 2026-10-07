@@ -27,6 +27,8 @@ En orden, sobre dos jugadores A y B en supervivencia:
 | A agrega 5 diamantes, B saca 2 | Sync de la lista en los dos sentidos | [inventario-compartido](../mod/inventario-compartido.md) |
 | A se pone casco, B se pone escudo en la mano secundaria | Sync del `EnumMap` de equipment | [inventario-compartido](../mod/inventario-compartido.md) |
 | Se guarda A, cambian ítems y hambre, se carga el guardado viejo en B | `load()`, `setAll()` y `readAdditionalSaveData()` bloqueados | [carga-de-datos-del-jugador](../mod/carga-de-datos-del-jugador.md) |
+| Entra C con un archivo **sin marca** (3 manzanas doradas y botas de diamante) | No entran a lo compartido; aparece **un** cofre al lado de C con todo | [carga-de-datos-del-jugador](../mod/carga-de-datos-del-jugador.md#cofre-con-los-ítems-de-antes-del-mod) |
+| Se guarda a C (ahora con la marca) y entra otro jugador con ese archivo | No aparece un segundo cofre | [carga-de-datos-del-jugador](../mod/carga-de-datos-del-jugador.md#cofre-con-los-ítems-de-antes-del-mod) |
 | `a.getFoodData() == b.getFoodData()` y se cambia la comida de A | El hambre es el mismo objeto | [vida-y-hambre](../mod/vida-y-hambre.md) |
 | A baja a 10 → B en 10; B se cura 4 → A en 14 | Reparto de vida en los dos sentidos | [vida-y-hambre](../mod/vida-y-hambre.md) |
 | A pierde 2 y B pierde 3 en el mismo tick → los dos en 9 | Se suman deltas, no se copia el último | [vida-y-hambre](../mod/vida-y-hambre.md) |
@@ -38,7 +40,8 @@ En orden, sobre dos jugadores A y B en supervivencia:
 - **Dos clientes reales.** El sync por paquetes (`broadcastChanges` y el paquete de vida hacia el cliente) no se ejercita: la conexión es falsa. Para eso está [probar con dos jugadores](../general/probar-con-dos-jugadores.md).
 - **Daño real** (mobs, caída, inanición): los jugadores de prueba son invulnerables. Ver [jugadores de prueba](jugadores-de-prueba.md).
 - **Que `FoodData.tick()` corra una sola vez por tick.** No hay aserción sobre la velocidad de regeneración.
-- **La migración del flag `initialized` con un mundo existente.** Los jugadores de prueba no tienen archivo guardado.
+- **El primer jugador tras instalar el mod** (con `initialized = false`, sus ítems pasan a ser los compartidos). Cuando corre el test, A y B ya marcaron el estado como inicializado.
+- **El caso sin lugar para el cofre** (ítems tirados a los pies).
 - **El guardado y la recarga del `.dat` entre reinicios.** El archivo se escribe (en `build/run/gameTest/world/data/inventariocompartido/`), pero ningún test reinicia el servidor y lo lee.
 
 ## Ver también

@@ -11,7 +11,7 @@ Java 25 · Fabric API 0.162.0+26.3 · Mixins sobre Minecraft 26.3 (nombres de Mo
 3. Verificá la firma real del método con `javap` (ver [minecraft-26-sin-ofuscar](../general/minecraft-26-sin-ofuscar.md)) en vez de confiar en tutoriales o en memoria.
 4. Corré `gradlew runGameTest`.
 
-No lances agentes de exploración sobre el código del mod: son 9 clases y todo lo que no dicen está en estas notas.
+No lances agentes de exploración sobre el código del mod: son 10 clases y todo lo que no dicen está en estas notas.
 
 ## Fundamentos
 
@@ -24,7 +24,7 @@ No lances agentes de exploración sobre el código del mod: son 9 clases y todo 
 
 | Nota | De qué trata |
 |---|---|
-| [Carga de datos del jugador](carga-de-datos-del-jugador.md) | `Inventory.load()` hace `clear()`, `EntityEquipment.setAll()` hace `clear()+putAll()` y `FoodData.readAdditionalSaveData()` pisa el hambre: sin bloquearlos, cada login borra lo del otro · se bloquean sólo con `initialized=true` · el primer jugador tras instalar el mod aporta sus ítems y su hambre, los del resto se pierden |
+| [Carga de datos del jugador](carga-de-datos-del-jugador.md) | `Inventory.load()` hace `clear()`, `EntityEquipment.setAll()` hace `clear()+putAll()` y `FoodData.readAdditionalSaveData()` pisa el hambre: sin bloquearlos, cada login borra lo del otro · se bloquean sólo con `initialized=true` · el primer jugador tras instalar el mod aporta sus ítems y su hambre · los ítems del resto van a un **cofre al lado suyo**, y la marca `InventarioCompartido` en su archivo es lo único que evita duplicarlos en cada login |
 | [Persistencia](persistencia.md) | Se guarda en `data/inventariocompartido/shared_inventory.dat` del mundo (ítems, armadura, hambre y vida), no en el NBT de cada jugador · `isDirty()` devuelve siempre `true` porque los `ItemStack` y el hambre se mutan sin avisar · `syncedHealth` no se guarda: es por objeto `ServerPlayer` · `DataFixTypes` null sólo funciona porque Fabric API lo parchea (vanilla da NPE) · el default de un codec es una instancia única: no uses objetos mutables |
 
 ## Ciclo de vida

@@ -19,8 +19,11 @@ public class InventarioCompartido implements ModInitializer {
 	public void onInitialize() {
 		// El primer jugador que entra al mundo (con el mod recién instalado) aporta su inventario
 		// como punto de partida. A partir de ahí, el inventario compartido es la única fuente de verdad.
-		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
-				SharedInventoryState.get(server).markInitialized());
+		// A los que tenían partida antes del mod se les devuelven sus ítems en un cofre.
+		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+			SharedInventoryState.get(server).markInitialized();
+			PersonalItemsChest.placeRescuedItems(handler.player);
+		});
 
 		// La vida no se comparte por referencia: se reparte al final de cada tick.
 		ServerTickEvents.END_SERVER_TICK.register(SharedVitals::syncHealth);
