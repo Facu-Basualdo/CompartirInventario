@@ -8,7 +8,8 @@
 		"FoodDataAccessor",
 		"FoodDataMixin",
 		"InventoryMixin",
-		"PlayerMixin"
+		"PlayerMixin",
+		"ServerGamePacketListenerImplMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

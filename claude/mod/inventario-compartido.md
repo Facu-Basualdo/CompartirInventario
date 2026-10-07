@@ -23,9 +23,26 @@ Los dos campos son `final`, por eso `items` lleva `@Mutable` en el `@Shadow` y e
 
 Consecuencias prácticas:
 
-- **No hace falta código de red.** `ServerPlayer.tick()` llama a `containerMenu.broadcastChanges()`, que compara cada slot con lo último enviado al cliente. Como el slot lee de la lista compartida, cualquier cambio hecho por el otro jugador aparece como diferencia y se manda. Funciona también con un cofre abierto, porque ese menú incluye los slots del inventario del jugador.
+- **No hace falta código de red.** `ServerPlayer.tick()` llama a `containerMenu.broadcastChanges()`, que compara cada slot con lo último enviado al cliente. Como el slot lee de la lista compartida, cualquier cambio hecho por el otro jugador aparece como diferencia y se manda. Funciona también con un cofre abierto, porque ese menú incluye los slots del inventario del jugador. El mod sólo **adelanta** ese aviso (ver [abajo](#el-aviso-a-los-demás-clientes-se-adelanta)).
 - **Mutar un `ItemStack` afecta a los dos.** `stack.shrink(1)` al poner un bloque descuenta del stack compartido; eso es lo buscado.
 - **Los `inventoryTick` corren una vez por jugador.** `Inventory.tick()` y `EntityEquipment.tick()` recorren los ítems de cada jugador, así que con dos jugadores cada ítem recibe dos `inventoryTick` por tick. Con ítems vanilla no hay efecto visible. Si aparece un ítem que se gasta o anima al doble, el origen es éste.
+
+## El aviso a los demás clientes se adelanta
+
+Síntoma sin esto: el jugador 1 pone un bloque o tira un ítem y el jugador 2 ve la cantidad vieja durante un instante.
+
+Los paquetes del cliente se procesan **entre ticks**, en la cola de tareas del servidor. Vanilla sólo llama a `broadcastChanges()` dentro de algunos handlers (`handleContainerClick`, `handleContainerButtonClick`, `handlePickItemFromEntity`, `handleSetCreativeModeSlot`) y sólo para **quien mandó el paquete**. Los demás se enteraban en su próximo `ServerPlayer.tick()`: hasta 50 ms más el ping.
+
+| Dónde | Qué hace | Cubre |
+|---|---|---|
+| `ServerGamePacketListenerImplMixin`, `@At("RETURN")` de 14 handlers | `SharedInventorySync.broadcastToOthers(player)`: `broadcastChanges()` de todos menos el que mandó el paquete | Poner bloques, usar o tirar ítems, romper bloques (durabilidad), atacar, interactuar con entidades, clicks en menús, cerrar el inventario (la grilla 2×2 devuelve ítems), recetario, trueques, creativo, pick block, bundles |
+| `END_SERVER_TICK` → `SharedInventorySync.broadcastToAll` | `broadcastChanges()` de todos | Lo que cambia **durante** el tick, por ejemplo levantar ítems del piso, si el otro jugador ya había hecho su broadcast en ese tick |
+
+- **`RETURN` sólo se alcanza en el hilo del servidor.** Cada handler se llama primero en el hilo de red, donde `PacketUtils.ensureRunningOnSameThread` lo reencola y corta con una excepción. Igual `broadcastToOthers` chequea `server.isSameThread()`.
+- **El `@Inject` lleva `require = 14`, uno por handler.** Con un array de métodos, `defaultRequire: 1` se conforma con que exista uno. Si en otra versión de Minecraft se renombra un handler, tiene que fallar al cargar y no dejar de sincronizar ese caso sin avisar. Si agregás o sacás un handler, actualizá el número.
+- **Un handler nuevo que toque el inventario hay que agregarlo a la lista.** Si no, funciona igual, pero con la demora de un tick.
+- **Es barato:** `broadcastChanges()` compara unos 46 slots, y vanilla ya lo hace en cada tick. No se enganchan paquetes de movimiento, que llegan muchas veces por segundo.
+- **No acelera lo que el otro ve en la mano del jugador** (el modelo 3D). Eso es el equipment de la entidad, que `LivingEntity` sincroniza aparte una vez por tick.
 
 ## Qué es por jugador
 

@@ -11,11 +11,15 @@ import org.jspecify.annotations.Nullable;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
+import net.minecraft.network.HashedStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
@@ -25,7 +29,11 @@ import net.minecraft.world.ItemStackWithSlot;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityEquipment;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerSynchronizer;
+import net.minecraft.world.inventory.RemoteSlot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -47,6 +55,16 @@ public class SharedInventoryGameTest {
 
 		helper.startSequence()
 				.thenExecute(() -> {
+					// Lo que tira A le llega a B en el momento, no en el próximo tick de B
+					a.getInventory().clearContent();
+					a.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 10));
+					a.getInventory().setSelectedSlot(0);
+					a.connection.handleAcceptPlayerLoad(new ServerboundPlayerLoadedPacket()); // si no, handlePlayerAction ignora el paquete
+					RecordingSynchronizer sentToB = new RecordingSynchronizer();
+					b.containerMenu.setSynchronizer(sentToB); // marca los 10 como ya enviados
+					a.connection.handlePlayerAction(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.DROP_ITEM, BlockPos.ZERO, Direction.DOWN));
+					helper.assertTrue(sentToB.sent(Items.COBBLESTONE, 9), Component.literal("B recibe el slot con 9 piedras sin esperar a su tick"));
+					helper.getLevel().getEntitiesOfClass(ItemEntity.class, a.getBoundingBox().inflate(5)).forEach(Entity::discard);
 					a.getInventory().clearContent();
 
 					// Inventario principal en ambos sentidos
@@ -202,6 +220,53 @@ public class SharedInventoryGameTest {
 			count += chest.countItem(item);
 		}
 		return count;
+	}
+
+	/** Registra los slots que el servidor le mandaría al cliente, que en los jugadores de prueba no existe. */
+	private static final class RecordingSynchronizer implements ContainerSynchronizer {
+		private final List<ItemStack> sentSlots = new ArrayList<>();
+
+		boolean sent(Item item, int count) {
+			return this.sentSlots.stream().anyMatch(stack -> stack.is(item) && stack.getCount() == count);
+		}
+
+		@Override
+		public void sendInitialData(AbstractContainerMenu menu, List<ItemStack> slots, ItemStack carried, int[] dataSlots) {
+		}
+
+		@Override
+		public void sendSlotChange(AbstractContainerMenu menu, int slot, ItemStack stack) {
+			this.sentSlots.add(stack.copy());
+		}
+
+		@Override
+		public void sendCarriedChange(AbstractContainerMenu menu, ItemStack stack) {
+		}
+
+		@Override
+		public void sendDataChange(AbstractContainerMenu menu, int id, int value) {
+		}
+
+		@Override
+		public RemoteSlot createSlot() {
+			return new RemoteSlot() {
+				private ItemStack last = ItemStack.EMPTY;
+
+				@Override
+				public void force(ItemStack stack) {
+					this.last = stack.copy();
+				}
+
+				@Override
+				public void receive(HashedStack stack) {
+				}
+
+				@Override
+				public boolean matches(ItemStack stack) {
+					return ItemStack.matches(this.last, stack);
+				}
+			};
+		}
 	}
 
 	private static void assertCount(GameTestHelper helper, Player player, Item item, int expected, String message) {

@@ -28,6 +28,9 @@ public class InventarioCompartido implements ModInitializer {
 		// La vida no se comparte por referencia: se reparte al final de cada tick.
 		ServerTickEvents.END_SERVER_TICK.register(SharedVitals::syncHealth);
 
+		// Lo que cambió durante el tick les llega a todos ahora y no en su próximo tick.
+		ServerTickEvents.END_SERVER_TICK.register(SharedInventorySync::broadcastToAll);
+
 		// En singleplayer se pueden abrir varios mundos en la misma sesión: no arrastrar el estado de uno a otro.
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> SharedInventoryState.clearActive());
 

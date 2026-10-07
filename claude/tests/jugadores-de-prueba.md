@@ -29,6 +29,8 @@ Síntomas con los que se descubrió: `kill()` dejaba al jugador vivo, y la vida 
 | Daño o curación | `setHealth(x)` / `heal(x)`: no pasan por la invulnerabilidad |
 | Muerte | **`setHealth(0)` y después `die(damageSources().genericKill())`**. Las dos cosas: el reparto de vida detecta la muerte por `getHealth()`, no por `die()` |
 
+**El mismo `hasClientLoaded()` hace que varios handlers ignoren el paquete.** `handlePlayerAction`, `handleUseItem`, `handleUseItemOn`, `handleAttack`, `handleInteract` y otros arrancan con `if (!hasClientLoaded()) return;`. Para mandarle un paquete a mano a un jugador de prueba, primero llamá a `jugador.connection.handleAcceptPlayerLoad(new ServerboundPlayerLoadedPacket())`. **Desde ahí el jugador deja de ser invulnerable**: hoy no importa porque ningún paso usa daño real, pero tenelo en cuenta si se agrega uno. El test lo hace con A antes de probar el ítem tirado. Los handlers se pueden llamar directo desde `thenExecute` porque el test corre en el hilo del servidor y `ensureRunningOnSameThread` no los reencola.
+
 `die()` es el punto que importa para el mod (dispara `dropEquipment` → `Inventory.dropAll()`), así que saltear el daño no le quita valor al test.
 
 ## Cargar un guardado en otro jugador

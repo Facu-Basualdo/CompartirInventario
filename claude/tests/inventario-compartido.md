@@ -16,6 +16,8 @@ La vida se reparte en `END_SERVER_TICK` (ver [vida y hambre](../mod/vida-y-hambr
 
 Una aserción que falla dentro de `thenExecute` marca el test como fallido (`executeWithoutFail` → `GameTestInfo.fail`): **no se reintenta**. Para esperar a que algo pase está `thenWaitUntil`.
 
+**Pero la secuencia sigue con los pasos siguientes.** Si un paso corta antes de asignar algo que usa el siguiente (por ejemplo `veteran[0]`), el siguiente tira un `NullPointerException`, el servidor crashea y **el mensaje de la aserción original no aparece en el log**. Ante un crash del test en un paso que no tocaste, sospechá del paso anterior.
+
 `maxTicks = 100` en el `@GameTest`, porque la secuencia dura varios ticks.
 
 ## Qué cubre
@@ -24,6 +26,7 @@ En orden, sobre dos jugadores A y B en supervivencia:
 
 | Paso | Qué verifica | Nota del mod |
 |---|---|---|
+| A tira un ítem con `handlePlayerAction(DROP_ITEM)` | B recibe el slot nuevo **en el mismo tick**, antes de su propio `tick()` | [inventario-compartido](../mod/inventario-compartido.md#el-aviso-a-los-demás-clientes-se-adelanta) |
 | A agrega 5 diamantes, B saca 2 | Sync de la lista en los dos sentidos | [inventario-compartido](../mod/inventario-compartido.md) |
 | A se pone casco, B se pone escudo en la mano secundaria | Sync del `EnumMap` de equipment | [inventario-compartido](../mod/inventario-compartido.md) |
 | Se guarda A, cambian ítems y hambre, se carga el guardado viejo en B | `load()`, `setAll()` y `readAdditionalSaveData()` bloqueados | [carga-de-datos-del-jugador](../mod/carga-de-datos-del-jugador.md) |
@@ -37,7 +40,7 @@ En orden, sobre dos jugadores A y B en supervivencia:
 
 ## Qué NO cubre
 
-- **Dos clientes reales.** El sync por paquetes (`broadcastChanges` y el paquete de vida hacia el cliente) no se ejercita: la conexión es falsa. Para eso está [probar con dos jugadores](../general/probar-con-dos-jugadores.md).
+- **Dos clientes reales.** La conexión es falsa: el paquete de vida hacia el cliente no se ejercita, y `broadcastChanges` sólo se verifica para el caso de tirar un ítem, cambiándole a B el `ContainerSynchronizer` por un `RecordingSynchronizer` que anota los slots que se mandarían. Los otros 13 handlers y el broadcast de `END_SERVER_TICK` no tienen aserción. Para eso está [probar con dos jugadores](../general/probar-con-dos-jugadores.md).
 - **Daño real** (mobs, caída, inanición): los jugadores de prueba son invulnerables. Ver [jugadores de prueba](jugadores-de-prueba.md).
 - **Que `FoodData.tick()` corra una sola vez por tick.** No hay aserción sobre la velocidad de regeneración.
 - **El primer jugador tras instalar el mod** (con `initialized = false`, sus ítems pasan a ser los compartidos). Cuando corre el test, A y B ya marcaron el estado como inicializado.

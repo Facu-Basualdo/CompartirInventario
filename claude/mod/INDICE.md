@@ -17,7 +17,7 @@ No lances agentes de exploración sobre el código del mod: son 10 clases y todo
 
 | Nota | De qué trata |
 |---|---|
-| [Inventario compartido](inventario-compartido.md) | Los jugadores comparten **la misma instancia** de `NonNullList` y del `EnumMap` de equipment, no copias · se asignan en el `<init>` de `Inventory` sólo para `ServerPlayer` · no hay código de red: el sync de menús de vanilla ya manda los slots cambiados · slot seleccionado, cursor y ender chest siguen siendo por jugador |
+| [Inventario compartido](inventario-compartido.md) | Los jugadores comparten **la misma instancia** de `NonNullList` y del `EnumMap` de equipment, no copias · se asignan en el `<init>` de `Inventory` sólo para `ServerPlayer` · no hay código de red: el sync de menús de vanilla ya manda los slots cambiados · el mod sólo lo adelanta (`broadcastChanges()` de los demás al volver de 14 handlers de paquetes y en `END_SERVER_TICK`): sin eso tardaba hasta 1 tick · `require = 14`: si agregás un handler, subí el número · slot seleccionado, cursor y ender chest siguen siendo por jugador |
 | [Vida y hambre](vida-y-hambre.md) | El hambre es un solo `FoodData` por referencia, pero la vida **no**: se reparte sumando deltas en `END_SERVER_TICK` (hasta 1 tick de demora) · `FoodData.tick()` se corta a una vez por tick o la regeneración va al doble · quien entra o reaparece **adopta** la vida, no la aporta · creativo/espectador no participan |
 
 ## Datos
