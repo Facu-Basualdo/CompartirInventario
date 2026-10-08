@@ -14,6 +14,8 @@ Extiende `SavedData` y se obtiene con `server.getDataStorage().computeIfAbsent(T
 | `equipment` | `EntityEquipment.CODEC` | Un `EntityEquipment` real; el mapa compartido sale de su campo `items` por `EntityEquipmentAccessor`. El codec de vanilla ya descarta los stacks vacíos al codificar. |
 | `food` | `FOOD_CODEC` propio (`level`, `saturation`, `exhaustion`) | `FoodData` no tiene codec en vanilla. `exhaustionLevel` es privado: se lee y escribe con `FoodDataAccessor`. El timer de regeneración no se guarda. |
 | `health` | `Codec.FLOAT` | `-1` (`UNKNOWN_HEALTH`) = nadie la fijó o murió el grupo. Ver [vida y hambre](vida-y-hambre.md). |
+| `experience` | `Codec.DOUBLE` | En **puntos**, no niveles. `-1` (`UNKNOWN_EXPERIENCE`) = mod recién instalado; el primero que entra aporta la suya. Ver [experiencia](experiencia.md). |
+| `experienceScore` | `Codec.INT` | El `totalExperience` compartido (puntaje de la pantalla de muerte). |
 | `initialized` | `Codec.BOOL` | Ver la migración en [carga de datos del jugador](carga-de-datos-del-jugador.md#migración-el-flag-initialized). |
 
 ## Gotchas
@@ -24,7 +26,7 @@ Extiende `SavedData` y se obtiene con `server.getDataStorage().computeIfAbsent(T
 
 **No uses objetos mutables como default en un codec.** La primera versión usaba `optionalFieldOf("equipment", new EntityEquipment())`. Ese default se crea **una sola vez** al armar el codec, así que dos mundos sin el campo (en singleplayer, en la misma sesión) habrían compartido el mismo `EntityEquipment`. Hoy es `optionalFieldOf("equipment")` + `orElseGet(EntityEquipment::new)`, y lo mismo para `food`.
 
-**`syncedHealth` no se guarda.** Es un `IdentityHashMap<ServerPlayer, Float>` con la vida de cada jugador en el último reparto. Al reiniciar el servidor arranca vacío y los que entran adoptan `health`.
+**`syncedHealth` y `syncedExperience` no se guardan.** Son `IdentityHashMap` por `ServerPlayer` con lo que le quedó a cada jugador en el último reparto. Al reiniciar el servidor arrancan vacíos y los que entran adoptan `health` y `experience`. Tampoco se guardan `experienceContributions` ni quién tiró la experiencia en la última muerte: duran un login o un tick.
 
 ## Estado activo estático
 
@@ -36,4 +38,5 @@ Extiende `SavedData` y se obtiene con `server.getDataStorage().computeIfAbsent(T
 
 - [Carga de datos del jugador](carga-de-datos-del-jugador.md)
 - [Inventario compartido](inventario-compartido.md)
+- [Experiencia](experiencia.md)
 - [Minecraft 26.x sin ofuscar](../general/minecraft-26-sin-ofuscar.md): cómo se verificó lo de `readTagFromDisk` con `javap`.

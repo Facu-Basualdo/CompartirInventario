@@ -33,7 +33,7 @@ Sin el flag, instalar el mod en un mundo existente arrancaría con el inventario
 3. Se dispara `ServerPlayConnectionEvents.JOIN` → `markInitialized()`. El flag se guarda con el estado (ver [persistencia](persistencia.md)).
 4. Desde ahí, todas las cargas se bloquean.
 
-Los ítems personales de los demás jugadores no entran a lo compartido, pero **tampoco se pierden**: van a un cofre (ver la sección siguiente). Su hambre sí se descarta, y su vida la reemplaza la compartida.
+Los ítems personales de los demás jugadores no entran a lo compartido, pero **tampoco se pierden**: van a un cofre (ver la sección siguiente). Su experiencia se **suma** a la compartida (ver [experiencia](experiencia.md#quién-aporta-y-quién-adopta)). Su hambre sí se descarta, y su vida la reemplaza la compartida.
 
 **`initialized` se marca en JOIN y no al terminar `load()`** porque un jugador nuevo (sin archivo) nunca pasa por `load()`. Si el flag dependiera de eso, en un mundo nuevo el primer reingreso de A volvería a cargar sus datos personales, posiblemente viejos, y pisaría lo que B hizo mientras A no estaba.
 
@@ -74,5 +74,6 @@ Dos cofres simples puestos uno al lado del otro no se unen en uno doble: `ChestB
 
 - [Inventario compartido](inventario-compartido.md)
 - [Persistencia](persistencia.md): dónde se guarda `initialized`.
+- [Experiencia](experiencia.md): el mismo archivo sin marca hace que su experiencia se sume.
 - [Tests: inventario compartido](../tests/inventario-compartido.md): el test guarda a A, cambia el inventario y carga el guardado viejo en B, y hace entrar a un jugador con un archivo sin marca.
 - [Tests: jugadores de prueba](../tests/jugadores-de-prueba.md): cómo hacer entrar a un jugador con un archivo guardado.

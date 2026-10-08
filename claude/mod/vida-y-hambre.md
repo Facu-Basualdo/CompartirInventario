@@ -39,7 +39,8 @@ La vida vive en los `SynchedEntityData` de cada entidad: no hay un objeto para c
 Si la vida compartida llega a 0 y había jugadores sincronizados, `killGroup`:
 
 - pone la vida compartida en `UNKNOWN_HEALTH` y reinicia el hambre (20 de comida, 5 de saturación), como un jugador recién creado;
-- a cada participante todavía vivo le hace `setHealth(0)` y `die(fuente)`, con la `getLastDamageSource()` del que murió primero. El mensaje de muerte de B dice lo que mató a A.
+- reinicia la experiencia compartida (ver [experiencia](experiencia.md));
+- a cada participante todavía vivo le hace `setHealth(0)` y `die(fuente)`, **empezando por la víctima**: el que ya murió por vanilla o, si nadie llegó a 0 solo, el que más vida perdió en el tick. La fuente es la `getLastDamageSource()` de la víctima: el mensaje de muerte de B dice lo que mató a A. El orden importa porque el primero en morir es el que tira los ítems y la experiencia (ver [muerte y respawn](muerte-y-respawn.md#dónde-caen-los-ítems-y-la-experiencia)).
 
 **El jugador que muere tiene que tener la vida en 0.** El delta sale de `getHealth()`. Un `die()` llamado directo, sin bajar la vida (por ejemplo desde otro mod), mata solo a ese jugador. Con daño real, `/kill` o inanición la vida siempre llega a 0.
 
@@ -55,4 +56,5 @@ La absorción (corazones amarillos) **no** se comparte: es otro campo (`absorpti
 - [Carga de datos del jugador](carga-de-datos-del-jugador.md): `FoodData.readAdditionalSaveData` también se bloquea.
 - [Persistencia](persistencia.md): `health` y `food` en el `.dat`.
 - [Muerte y respawn](muerte-y-respawn.md)
+- [Experiencia](experiencia.md): el mismo reparto por deltas, en puntos.
 - [Tests: jugadores de prueba](../tests/jugadores-de-prueba.md): por qué el test no usa `makeMockServerPlayerInLevel`.

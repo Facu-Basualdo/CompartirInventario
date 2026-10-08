@@ -3,6 +3,7 @@ package com.inventariocompartido.mixin;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.inventariocompartido.SharedExperience;
 import com.inventariocompartido.SharedInventoryState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -10,7 +11,10 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.ItemStackWithSlot;
 import net.minecraft.world.entity.EntityEquipment;
 import net.minecraft.world.entity.player.Player;
@@ -59,6 +63,8 @@ public abstract class PlayerMixin {
 		if (state == null || !state.isInitialized() || input.getBooleanOr(SHARED_MARKER, false)) {
 			return;
 		}
+		// Su experiencia sí se carga (vanilla la lee en este mismo método); en su primer tick se suma a la compartida.
+		state.addExperienceContribution(self.getGameProfile().id());
 
 		List<ItemStack> items = new ArrayList<>();
 		for (ItemStackWithSlot item : input.listOrEmpty("Inventory", ItemStackWithSlot.CODEC)) {
@@ -75,6 +81,14 @@ public abstract class PlayerMixin {
 		});
 		if (!items.isEmpty()) {
 			state.addRescuedItems(self.getGameProfile().id(), items);
+		}
+	}
+
+	// Sólo cuenta para los orbes que se tiran al morir: los demás del grupo ya no tienen nada que tirar.
+	@Inject(method = "getBaseExperienceReward", at = @At("HEAD"), cancellable = true)
+	private void inventariocompartido$dropSharedExperienceOnce(ServerLevel level, CallbackInfoReturnable<Integer> cir) {
+		if ((Object) this instanceof ServerPlayer player && !SharedExperience.shouldDropExperience(player)) {
+			cir.setReturnValue(0);
 		}
 	}
 }

@@ -27,6 +27,8 @@ public class InventarioCompartido implements ModInitializer {
 
 		// La vida no se comparte por referencia: se reparte al final de cada tick.
 		ServerTickEvents.END_SERVER_TICK.register(SharedVitals::syncHealth);
+		// Después de la vida: si murió el grupo, la experiencia ya quedó reiniciada.
+		ServerTickEvents.END_SERVER_TICK.register(SharedExperience::sync);
 
 		// Lo que cambió durante el tick les llega a todos ahora y no en su próximo tick.
 		ServerTickEvents.END_SERVER_TICK.register(SharedInventorySync::broadcastToAll);

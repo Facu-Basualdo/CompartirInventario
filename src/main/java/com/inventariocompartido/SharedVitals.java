@@ -36,7 +36,10 @@ public final class SharedVitals {
 		Map<ServerPlayer, Float> synced = state.syncedHealth();
 		float health = state.health();
 		boolean anySynced = false;
-		@Nullable DamageSource deathSource = null;
+		// El que recibió el golpe que mata al grupo: el que ya murió o, si nadie llegó a 0 por su cuenta
+		// (dos golpes en el mismo tick), el que más vida perdió.
+		@Nullable ServerPlayer victim = null;
+		float victimDelta = 0;
 		List<ServerPlayer> newcomers = new ArrayList<>();
 
 		for (ServerPlayer player : players) {
@@ -44,9 +47,12 @@ public final class SharedVitals {
 			if (last != null) {
 				// Cuenta aunque haya muerto en este tick: su golpe final es el que mata al grupo.
 				anySynced = true;
-				health += player.getHealth() - last;
-				if (player.isDeadOrDying() && deathSource == null) {
-					deathSource = player.getLastDamageSource();
+				float delta = player.getHealth() - last;
+				health += delta;
+				boolean dead = player.isDeadOrDying();
+				if (victim == null || (dead && !victim.isDeadOrDying()) || (dead == victim.isDeadOrDying() && delta < victimDelta)) {
+					victim = player;
+					victimDelta = delta;
 				}
 			} else if (participates(player) && player.isAlive()) {
 				newcomers.add(player);
@@ -64,8 +70,8 @@ public final class SharedVitals {
 			}
 		}
 
-		if (anySynced && health <= 0) {
-			killGroup(state, players, deathSource);
+		if (anySynced && health <= 0 && victim != null) {
+			killGroup(state, players, victim);
 			return;
 		}
 
@@ -91,15 +97,25 @@ public final class SharedVitals {
 		}
 	}
 
-	private static void killGroup(SharedInventoryState state, List<ServerPlayer> players, @Nullable DamageSource deathSource) {
+	/**
+	 * El primero en morir tira el inventario compartido y la experiencia, así que la víctima muere antes
+	 * que el resto: todo queda donde recibió el golpe y no al lado de quien esté primero en la lista.
+	 */
+	private static void killGroup(SharedInventoryState state, List<ServerPlayer> players, ServerPlayer victim) {
 		state.setHealth(SharedInventoryState.UNKNOWN_HEALTH);
 		state.resetFood();
 		state.syncedHealth().clear();
+		SharedExperience.onGroupDeath(state, victim);
 
-		for (ServerPlayer player : players) {
+		@Nullable DamageSource lastSource = victim.getLastDamageSource();
+		DamageSource deathSource = lastSource != null ? lastSource : victim.damageSources().generic();
+		List<ServerPlayer> order = new ArrayList<>(players);
+		order.remove(victim);
+		order.addFirst(victim);
+		for (ServerPlayer player : order) {
 			if (participates(player) && player.isAlive()) {
 				player.setHealth(0);
-				player.die(deathSource != null ? deathSource : player.damageSources().generic());
+				player.die(deathSource);
 			}
 		}
 	}

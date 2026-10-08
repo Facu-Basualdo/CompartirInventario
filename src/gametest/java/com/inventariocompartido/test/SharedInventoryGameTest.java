@@ -8,6 +8,8 @@ import com.mojang.authlib.GameProfile;
 import io.netty.channel.embedded.EmbeddedChannel;
 import org.jspecify.annotations.Nullable;
 
+import com.inventariocompartido.SharedInventoryState;
+
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 
 import net.minecraft.core.BlockPos;
@@ -29,6 +31,7 @@ import net.minecraft.world.ItemStackWithSlot;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityEquipment;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -121,6 +124,7 @@ public class SharedInventoryGameTest {
 					EntityEquipment personalEquipment = new EntityEquipment();
 					personalEquipment.set(EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
 					personal.store("equipment", EntityEquipment.CODEC, personalEquipment);
+					personal.putInt("XpLevel", 3);
 					veteran[0] = joinSurvivalPlayer(helper, "jugador-c", personal.buildResult(), helper.absolutePos(new BlockPos(1, 1, 1)));
 					assertCount(helper, a, Items.GOLDEN_APPLE, 0, "Las manzanas de antes del mod no entran al inventario compartido");
 					helper.assertFalse(a.getItemBySlot(EquipmentSlot.FEET).is(Items.DIAMOND_BOOTS), Component.literal("Las botas de antes del mod no entran a la armadura compartida"));
@@ -132,6 +136,8 @@ public class SharedInventoryGameTest {
 					helper.assertTrue(countChests(c) == 1, Component.literal("Aparece un cofre al lado del jugador (hay " + countChests(c) + ")"));
 					helper.assertTrue(countInChests(c, Items.GOLDEN_APPLE) == 3, Component.literal("El cofre tiene las 3 manzanas"));
 					helper.assertTrue(countInChests(c, Items.DIAMOND_BOOTS) == 1, Component.literal("El cofre tiene las botas"));
+					// Su experiencia no se pierde: se suma a la compartida
+					assertLevel(helper, a, 3, "A recibe los 3 niveles de antes del mod de C");
 
 					// Un archivo guardado con el mod ya tiene la marca: entrar de nuevo no crea otro cofre
 					TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, c.registryAccess());
@@ -176,17 +182,46 @@ public class SharedInventoryGameTest {
 				.thenExecute(() -> {
 					assertHealth(helper, respawned[0], 9, "El jugador recreado adopta la vida compartida");
 					assertHealth(helper, b, 9, "Recrear un jugador no cura a los demás");
+					assertLevel(helper, respawned[0], 3, "El jugador recreado adopta la experiencia compartida");
 
-					// Si uno muere, mueren todos y el inventario cae una sola vez. Los jugadores de prueba son
-					// invulnerables (no tienen cliente real), así que se simula la muerte con setHealth + die.
-					respawned[0].setHealth(0);
-					respawned[0].die(respawned[0].damageSources().genericKill());
-					helper.assertTrue(b.getInventory().isEmpty(), Component.literal("Tras la muerte de A, el inventario compartido queda vacío"));
+					// Experiencia: se suman los puntos de los dos en el mismo tick (27 + 20 + 5 = 52: nivel 4)
+					respawned[0].giveExperiencePoints(20);
+					b.giveExperiencePoints(5);
+				})
+				.thenIdle(1)
+				.thenExecute(() -> {
+					assertLevel(helper, respawned[0], 4, "A recibe la experiencia de B");
+					assertLevel(helper, b, 4, "B recibe la experiencia de A");
+					// Gastar niveles (encantar, yunque) también se comparte
+					b.giveExperienceLevels(-1);
+				})
+				.thenIdle(1)
+				.thenExecute(() -> {
+					assertLevel(helper, respawned[0], 3, "A ve los niveles que gastó B");
+
+					// Si uno muere, mueren todos, y el inventario y la experiencia caen una sola vez, donde está el
+					// que recibió el golpe. Los dos reciben daño en el mismo tick y ninguno llega a 0 solo: la vida
+					// compartida sí. Los jugadores de prueba son invulnerables (no tienen cliente real), así que el
+					// daño se simula con setHealth.
+					BlockPos here = helper.absolutePos(new BlockPos(1, 1, 1));
+					BlockPos away = helper.absolutePos(new BlockPos(1, 1, 12));
+					respawned[0].teleportTo(here.getX() + 0.5, here.getY(), here.getZ() + 0.5);
+					b.teleportTo(away.getX() + 0.5, away.getY(), away.getZ() + 0.5);
+					respawned[0].setHealth(4);
+					b.setHealth(5);
 				})
 				.thenIdle(1)
 				.thenExecute(() -> {
 					helper.assertTrue(b.isDeadOrDying(), Component.literal("B muere cuando muere A"));
+					helper.assertTrue(respawned[0].isDeadOrDying(), Component.literal("A muere por los golpes de los dos"));
+					helper.assertTrue(b.getInventory().isEmpty(), Component.literal("Tras la muerte del grupo, el inventario compartido queda vacío"));
+					helper.assertTrue(countDropped(respawned[0], Items.EMERALD) == 7, Component.literal("Las esmeraldas caen una vez al lado de A, que recibió más daño"));
+					helper.assertTrue(countDropped(b, Items.EMERALD) == 0, Component.literal("Al lado de B no cae nada"));
+					helper.assertTrue(droppedExperience(respawned[0]) == 21, Component.literal("A tira la experiencia del grupo una vez (tiró " + droppedExperience(respawned[0]) + ")"));
+					helper.assertTrue(droppedExperience(b) == 0, Component.literal("B no tira otra copia de la experiencia"));
+					helper.assertTrue(SharedInventoryState.get(helper.getLevel().getServer()).experiencePoints() == 0, Component.literal("La experiencia compartida se pierde al morir"));
 					assertFood(helper, b, 20, "El hambre compartida se reinicia al morir");
+					helper.getLevel().getEntitiesOfClass(Entity.class, b.getBoundingBox().inflate(20), e -> e instanceof ItemEntity || e instanceof ExperienceOrb).forEach(Entity::discard);
 					playerList.remove(respawned[0]);
 					playerList.remove(b);
 				})
@@ -290,6 +325,20 @@ public class SharedInventoryGameTest {
 				}
 			};
 		}
+	}
+
+	private static int countDropped(ServerPlayer player, Item item) {
+		return player.level().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(4), e -> e.getItem().is(item))
+				.stream().mapToInt(e -> e.getItem().getCount()).sum();
+	}
+
+	private static int droppedExperience(ServerPlayer player) {
+		return player.level().getEntitiesOfClass(ExperienceOrb.class, player.getBoundingBox().inflate(4))
+				.stream().mapToInt(ExperienceOrb::getValue).sum();
+	}
+
+	private static void assertLevel(GameTestHelper helper, Player player, int expected, String message) {
+		helper.assertTrue(player.experienceLevel == expected, Component.literal(message + " (nivel " + player.experienceLevel + ", esperado " + expected + ")"));
 	}
 
 	private static void assertCount(GameTestHelper helper, Player player, Item item, int expected, String message) {

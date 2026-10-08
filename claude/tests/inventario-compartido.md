@@ -31,13 +31,18 @@ En orden, sobre dos jugadores A y B en supervivencia:
 | A agrega 5 diamantes, B saca 2 | Sync de la lista en los dos sentidos | [inventario-compartido](../mod/inventario-compartido.md) |
 | A se pone casco, B se pone escudo en la mano secundaria | Sync del `EnumMap` de equipment | [inventario-compartido](../mod/inventario-compartido.md) |
 | Se guarda A, cambian ítems y hambre, se carga el guardado viejo en B | `load()`, `setAll()` y `readAdditionalSaveData()` bloqueados | [carga-de-datos-del-jugador](../mod/carga-de-datos-del-jugador.md) |
-| Entra C con un archivo **sin marca** (3 manzanas doradas y botas de diamante) | No entran a lo compartido; aparece **un** cofre al lado de C con todo | [carga-de-datos-del-jugador](../mod/carga-de-datos-del-jugador.md#cofre-con-los-ítems-de-antes-del-mod) |
+| Entra C con un archivo **sin marca** (3 manzanas doradas, botas de diamante y `XpLevel` 3) | No entran a lo compartido; aparece **un** cofre al lado de C con todo; los 3 niveles **sí** se suman a la experiencia compartida (A queda en nivel 3) | [carga-de-datos-del-jugador](../mod/carga-de-datos-del-jugador.md#cofre-con-los-ítems-de-antes-del-mod) |
 | Se guarda a C (ahora con la marca) y entra otro jugador con ese archivo | No aparece un segundo cofre | [carga-de-datos-del-jugador](../mod/carga-de-datos-del-jugador.md#cofre-con-los-ítems-de-antes-del-mod) |
 | `a.getFoodData() == b.getFoodData()` y se cambia la comida de A | El hambre es el mismo objeto | [vida-y-hambre](../mod/vida-y-hambre.md) |
 | A baja a 10 → B en 10; B se cura 4 → A en 14 | Reparto de vida en los dos sentidos | [vida-y-hambre](../mod/vida-y-hambre.md) |
 | A pierde 2 y B pierde 3 en el mismo tick → los dos en 9 | Se suman deltas, no se copia el último | [vida-y-hambre](../mod/vida-y-hambre.md) |
-| `PlayerList.respawn(A, true, …)` | El `ServerPlayer` nuevo comparte inventario y hambre, adopta la vida y no cura a B | [muerte-y-respawn](../mod/muerte-y-respawn.md) |
-| A muere | El inventario queda vacío, B muere en el tick siguiente y el hambre vuelve a 20 | [muerte-y-respawn](../mod/muerte-y-respawn.md) |
+| `PlayerList.respawn(A, true, …)` | El `ServerPlayer` nuevo comparte inventario y hambre, adopta la vida y la experiencia, y no cura a B | [muerte-y-respawn](../mod/muerte-y-respawn.md) |
+| A junta 20 puntos y B 5 en el mismo tick → los dos en nivel 4; B gasta un nivel → A en 3 | Reparto de experiencia por puntos, y que gastar niveles también se comparte | [experiencia](../mod/experiencia.md) |
+| A (en el área) pierde 5 y B (11 bloques más lejos) pierde 4 en el mismo tick, con 9 de vida | Mueren los dos; las 7 esmeraldas y 21 puntos de orbes (nivel 3 × 7) caen **al lado de A** y nada al lado de B; la experiencia compartida queda en 0; el hambre vuelve a 20 | [muerte-y-respawn](../mod/muerte-y-respawn.md#dónde-caen-los-ítems-y-la-experiencia) |
+
+**Al jugador recreado no le des experiencia (ni vida) en el mismo paso del respawn.** Hasta el primer reparto no está sincronizado: en ese tick adopta lo compartido y lo que le hayas dado se pierde. Por eso los 20 puntos van un `thenIdle(1)` después.
+
+En la muerte grupal, A es el que más vida pierde (5 contra 4) y B queda lejos para que los drops se distingan. Sin la elección de víctima caerían al lado de B, que queda primero en `PlayerList` porque el respawn agrega a A al final.
 
 ## Qué NO cubre
 
@@ -54,3 +59,4 @@ En orden, sobre dos jugadores A y B en supervivencia:
 - [Jugadores de prueba](jugadores-de-prueba.md): por qué no se usa `makeMockServerPlayerInLevel` y cómo simular la muerte.
 - [Inventario compartido (mod)](../mod/inventario-compartido.md)
 - [Vida y hambre (mod)](../mod/vida-y-hambre.md)
+- [Experiencia (mod)](../mod/experiencia.md)
