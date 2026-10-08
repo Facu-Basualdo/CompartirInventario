@@ -4,9 +4,10 @@ Mod de Fabric para **Minecraft Java 26.3** en el que todos los jugadores del ser
 
 - **un solo inventario**: inventario, barra rápida, armadura y mano secundaria;
 - **una sola barra de hambre**;
-- **una sola barra de vida**.
+- **una sola barra de vida**;
+- **una sola barra de experiencia**.
 
-Lo que agarra uno le aparece al otro, si a uno le pegan les baja la vida a los dos, y si uno come se llenan los dos. Si uno muere, mueren todos.
+Lo que agarra uno le aparece al otro, si a uno le pegan les baja la vida a los dos, si uno come se llenan los dos y si uno encanta les bajan los niveles a los dos. Si uno muere, mueren todos.
 
 ## Cómo funciona en el juego
 
@@ -16,13 +17,15 @@ Lo que agarra uno le aparece al otro, si a uno le pegan les baja la vida a los d
 | Armadura y mano secundaria | ✅ | |
 | Hambre y saturación | ✅ | |
 | Vida | ✅ | Corazones de absorción (amarillos) |
-| | | Ítem en el cursor, grilla de crafteo 2×2, ender chest, experiencia |
+| Experiencia (niveles y puntaje) | ✅ | |
+| | | Ítem en el cursor, grilla de crafteo 2×2, ender chest |
 
 - **Lo comparten todos los jugadores conectados**, no por parejas. Con dos jugadores es "un inventario para los dos"; un tercero también entra.
-- **Creativo y espectador** comparten el inventario, pero no la vida ni el hambre.
-- **Muerte:** cuando muere uno, los demás mueren en el mismo instante. Los ítems caen una sola vez, al lado del primero, y el hambre vuelve a llenarse. Con `/gamerule keepInventory true` no se pierden los ítems, pero igual mueren todos.
+- **Creativo y espectador** comparten el inventario, pero no la vida, el hambre ni la experiencia.
+- **Experiencia:** se suma en puntos, no en niveles, así que juntar orbes rinde lo mismo que si los juntara un solo jugador. Encantar, el yunque y `/xp` también afectan a todos.
+- **Muerte:** cuando muere uno, los demás mueren en el mismo instante. Los ítems y los orbes de experiencia caen una sola vez, al lado del que recibió el golpe; el hambre vuelve a llenarse y la experiencia vuelve a 0. Con `/gamerule keepInventory true` no se pierden ni los ítems ni la experiencia, pero igual mueren todos.
 - **Todo se guarda en el mundo** (`world/data/inventariocompartido/shared_inventory.dat`), no en cada jugador. Si alguien se desconecta con poca vida, el que entre después arranca con esa vida.
-- **Mundo existente:** al instalar el mod en un mundo que ya tiene partida, el primer jugador que entra aporta sus ítems y su hambre al inventario compartido. **Los ítems de los demás no se pierden:** la primera vez que entra cada uno, le aparecen en un cofre a su lado y un mensaje en el chat le dice dónde está. Si no hay lugar para el cofre, quedan tirados a sus pies.
+- **Mundo existente:** al instalar el mod en un mundo que ya tiene partida, el primer jugador que entra aporta sus ítems y su hambre al inventario compartido. La experiencia de cada uno se suma a la compartida la primera vez que entra. **Los ítems de los demás no se pierden:** la primera vez que entra cada uno, le aparecen en un cofre a su lado y un mensaje en el chat le dice dónde está. Si no hay lugar para el cofre, quedan tirados a sus pies.
 
 ## Requisitos
 
@@ -56,7 +59,7 @@ El proyecto pide Java 25 (`gradle/gradle-daemon-jvm.properties`). Si Gradle no e
 ./gradlew runGameTest    # pruebas automáticas en un servidor sin ventana
 ```
 
-Las pruebas crean dos jugadores y verifican que se compartan el inventario, la armadura, el hambre y la vida. También verifican que el respawn mantenga todo compartido y que, si muere uno, muera el otro.
+Las pruebas crean dos jugadores y verifican que se compartan el inventario, la armadura, el hambre, la vida y la experiencia. También verifican que el respawn mantenga todo compartido y que, si muere uno, muera el otro.
 
 Para probar a mano con dos clientes:
 
@@ -68,7 +71,7 @@ Para probar a mano con dos clientes:
 ## Estructura
 
 ```
-src/main/       el mod: mixins sobre Inventory, EntityEquipment, Player y FoodData, más el estado compartido
+src/main/       el mod: mixins sobre Inventory, EntityEquipment, Player y FoodData, más el estado compartido (vida y experiencia se reparten al final de cada tick)
 src/gametest/   pruebas automáticas (Fabric GameTest)
 claude/         documentación técnica para agentes de IA (invariantes, decisiones y bugs ya resueltos)
 ```
@@ -77,4 +80,4 @@ Para entender por qué el código está hecho así, empezá por [CLAUDE.md](CLAU
 
 ## Licencia
 
-Todavía sin definir: hoy `fabric.mod.json` declara `All-Rights-Reserved`.
+[MIT](LICENSE): podés usarlo, modificarlo y redistribuirlo (también en modpacks) siempre que mantengas el aviso de copyright.

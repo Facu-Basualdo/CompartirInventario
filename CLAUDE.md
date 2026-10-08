@@ -44,6 +44,7 @@ El mismo tema en distintas áreas usa el mismo nombre de archivo (`claude/mod/in
 ## Reglas de workflow
 
 - **Después de cada feature corré `/docs`** para actualizar las notas según el diff, y `node scripts/verificar-docs.mjs` tiene que dar OK.
+- **Si la feature se nota en el juego, actualizá el `README.md`** (la lista de qué se comparte, la tabla "Cómo funciona en el juego" y lo que verifican las pruebas): es lo que lee quien instala el mod, y `/docs` sólo toca `claude/`.
 - **Antes de dar algo por terminado corré `gradlew runGameTest`**: compila no alcanza, los mixins recién se aplican en runtime.
 - **Con cada cambio que se pueda notar en el juego, subí `version` en `gradle.properties`** (sale en el nombre del jar y en `fabric.mod.json`): minor (`1.1.0` → `1.2.0`) para una feature nueva, patch (`1.1.0` → `1.1.1`) para un arreglo. Si es otra versión, el jar viejo y el nuevo no se confunden en la carpeta `mods/`.
 - **No commitees ni pushees salvo que te lo pidan.**

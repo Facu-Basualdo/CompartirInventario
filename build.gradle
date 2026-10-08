@@ -48,6 +48,11 @@ tasks.withType(JavaCompile).configureEach {
 	it.options.release = 25
 }
 
+// MIT pide que el aviso de copyright viaje con cada copia, y el jar es la copia que circula.
+jar {
+	from("LICENSE")
+}
+
 java {
 	withSourcesJar()
 
