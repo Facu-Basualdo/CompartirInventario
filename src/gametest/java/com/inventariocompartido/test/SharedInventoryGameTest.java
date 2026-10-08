@@ -38,6 +38,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
@@ -65,6 +66,24 @@ public class SharedInventoryGameTest {
 					a.connection.handlePlayerAction(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.DROP_ITEM, BlockPos.ZERO, Direction.DOWN));
 					helper.assertTrue(sentToB.sent(Items.COBBLESTONE, 9), Component.literal("B recibe el slot con 9 piedras sin esperar a su tick"));
 					helper.getLevel().getEntitiesOfClass(ItemEntity.class, a.getBoundingBox().inflate(5)).forEach(Entity::discard);
+					a.getInventory().clearContent();
+
+					// Si A gasta el hacha mientras B pica con ella, a B no le llega hasta que termina: el cliente le reiniciaría el progreso
+					BlockPos log = helper.absolutePos(new BlockPos(1, 1, 1));
+					helper.getLevel().setBlockAndUpdate(log, Blocks.OAK_LOG.defaultBlockState());
+					b.setPos(log.getX() + 0.5, log.getY(), log.getZ() + 1.5);
+					a.getInventory().setItem(0, new ItemStack(Items.IRON_AXE));
+					b.getInventory().setSelectedSlot(0);
+					RecordingSynchronizer sentToMiner = new RecordingSynchronizer();
+					b.containerMenu.setSynchronizer(sentToMiner);
+					b.gameMode.handleBlockBreakAction(log, ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, Direction.SOUTH, helper.getLevel().getMaxY(), 0);
+					a.getMainHandItem().setDamageValue(1);
+					b.containerMenu.broadcastChanges();
+					helper.assertFalse(sentToMiner.sentDamaged(Items.IRON_AXE, 1), Component.literal("B no recibe el hacha gastada mientras pica con ella"));
+					b.gameMode.handleBlockBreakAction(log, ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, Direction.SOUTH, helper.getLevel().getMaxY(), 0);
+					b.containerMenu.broadcastChanges();
+					helper.assertTrue(sentToMiner.sentDamaged(Items.IRON_AXE, 1), Component.literal("B recibe el hacha gastada cuando deja de picar"));
+					helper.getLevel().removeBlock(log, false);
 					a.getInventory().clearContent();
 
 					// Inventario principal en ambos sentidos
@@ -228,6 +247,10 @@ public class SharedInventoryGameTest {
 
 		boolean sent(Item item, int count) {
 			return this.sentSlots.stream().anyMatch(stack -> stack.is(item) && stack.getCount() == count);
+		}
+
+		boolean sentDamaged(Item item, int damage) {
+			return this.sentSlots.stream().anyMatch(stack -> stack.is(item) && stack.getDamageValue() == damage);
 		}
 
 		@Override

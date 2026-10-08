@@ -44,6 +44,28 @@ Los paquetes del cliente se procesan **entre ticks**, en la cola de tareas del s
 - **Es barato:** `broadcastChanges()` compara unos 46 slots, y vanilla ya lo hace en cada tick. No se enganchan paquetes de movimiento, que llegan muchas veces por segundo.
 - **No acelera lo que el otro ve en la mano del jugador** (el modelo 3D). Eso es el equipment de la entidad, que `LivingEntity` sincroniza aparte una vez por tick.
 
+## La herramienta del que pica no se actualiza hasta que termina
+
+Síntoma sin esto: dos jugadores pican bloques distintos con la misma hacha y, cuando uno rompe el suyo, al otro se le reinicia el progreso.
+
+**La causa está en el cliente de vanilla, no en el mod.** `MultiPlayerGameMode.continueDestroyBlock` llama a `sameDestroyTarget`, que compara el ítem de la mano con el que el cliente anotó al empezar (`destroyingItem`) usando `ItemStack.isSameItemSameComponents`. La durabilidad es el componente `DAMAGE`: cuando el otro rompe su bloque, el servidor le baja la durabilidad al hacha compartida, manda el slot nuevo y el cliente lo toma como "cambiaste de herramienta" y vuelve a empezar. En vanilla no pasa porque la herramienta sólo se gasta cuando su dueño termina.
+
+**El arreglo es del servidor: a quien está picando no se le manda el slot de su mano mientras siga picando con ese mismo objeto.**
+
+| Dónde | Qué hace |
+|---|---|
+| `ServerPlayerGameModeMixin`, `@At("HEAD")` de `handleBlockBreakAction` | Con `START_DESTROY_BLOCK` anota `player.getMainHandItem()`: el mismo ítem que anota el cliente |
+| `ServerPlayerGameModeMixin.inventariocompartido$isMiningWith(stack)` (interfaz `BlockMiner`) | `true` si `isDestroyingBlock`, el stack es **el mismo objeto** que se anotó y no está vacío |
+| `AbstractContainerMenuMixin`, `@At("HEAD")` de `synchronizeSlotToRemote`, cancelable | Si el slot es del `Inventory` de un `ServerPlayer`, es su slot seleccionado y ese jugador está picando con ese stack, no lo manda |
+
+- **Retener funciona porque no se marca como enviado.** `synchronizeSlotToRemote` cancela antes de `RemoteSlot.force()`, así que el próximo `broadcastChanges()` vuelve a ver la diferencia. Cuando el jugador termina (`STOP_DESTROY_BLOCK`) o suelta (`ABORT_DESTROY_BLOCK`), vanilla pone `isDestroyingBlock = false` y el slot sale en el siguiente broadcast.
+- **La comparación es por identidad, no por ítem.** `setDamageValue` muta el mismo `ItemStack`, así que el hacha gastada sigue siendo el objeto anotado. Si el otro jugador **saca** el hacha de ese slot o pone otra cosa, el objeto es otro y se manda en el momento: ahí sí corresponde que el cliente corte, porque ya no tiene la herramienta.
+- **Si el hacha se rompe, se manda.** El stack queda con cantidad 0 (`isEmpty()`) y el chequeo lo deja pasar.
+- **El que rompe su propio bloque no se retiene a sí mismo.** Vanilla pone `isDestroyingBlock = false` en `STOP_DESTROY_BLOCK` **antes** de `destroyAndAck`, que es donde se gasta la herramienta.
+- **El servidor no tenía el problema.** `handleBlockBreakAction` calcula el progreso con ticks transcurridos y `getDestroyProgress` con la herramienta actual: la durabilidad no cambia la velocidad.
+- **También aplica sin compartir.** Un hacha que se repara con Mending mientras picás reinicia el progreso en vanilla; con el mod se retiene igual. No rompe nada: sólo demora el número de durabilidad hasta que terminás.
+- **`broadcastFullState()` y `sendAllDataToRemote()` no pasan por `synchronizeSlotToRemote`** y mandan todo igual. Se usan al abrir menús o cuando el cliente y el servidor se desincronizan en un click, cosas que no pasan mientras se pica.
+
 ## Qué es por jugador
 
 | Cosa | Por qué no se comparte |

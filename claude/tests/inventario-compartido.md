@@ -27,6 +27,7 @@ En orden, sobre dos jugadores A y B en supervivencia:
 | Paso | Qué verifica | Nota del mod |
 |---|---|---|
 | A tira un ítem con `handlePlayerAction(DROP_ITEM)` | B recibe el slot nuevo **en el mismo tick**, antes de su propio `tick()` | [inventario-compartido](../mod/inventario-compartido.md#el-aviso-a-los-demás-clientes-se-adelanta) |
+| B empieza a picar un tronco con el hacha compartida (`b.gameMode.handleBlockBreakAction(START_DESTROY_BLOCK)`) y A le baja la durabilidad | B **no** recibe el hacha gastada mientras pica; sí la recibe después del `ABORT_DESTROY_BLOCK` | [inventario-compartido](../mod/inventario-compartido.md#la-herramienta-del-que-pica-no-se-actualiza-hasta-que-termina) |
 | A agrega 5 diamantes, B saca 2 | Sync de la lista en los dos sentidos | [inventario-compartido](../mod/inventario-compartido.md) |
 | A se pone casco, B se pone escudo en la mano secundaria | Sync del `EnumMap` de equipment | [inventario-compartido](../mod/inventario-compartido.md) |
 | Se guarda A, cambian ítems y hambre, se carga el guardado viejo en B | `load()`, `setAll()` y `readAdditionalSaveData()` bloqueados | [carga-de-datos-del-jugador](../mod/carga-de-datos-del-jugador.md) |
@@ -40,7 +41,7 @@ En orden, sobre dos jugadores A y B en supervivencia:
 
 ## Qué NO cubre
 
-- **Dos clientes reales.** La conexión es falsa: el paquete de vida hacia el cliente no se ejercita, y `broadcastChanges` sólo se verifica para el caso de tirar un ítem, cambiándole a B el `ContainerSynchronizer` por un `RecordingSynchronizer` que anota los slots que se mandarían. Los otros 13 handlers y el broadcast de `END_SERVER_TICK` no tienen aserción. Para eso está [probar con dos jugadores](../general/probar-con-dos-jugadores.md).
+- **Dos clientes reales.** La conexión es falsa: el paquete de vida hacia el cliente no se ejercita, y `broadcastChanges` sólo se verifica para tirar un ítem y para el hacha retenida mientras se pica, cambiándole a B el `ContainerSynchronizer` por un `RecordingSynchronizer` que anota los slots que se mandarían. Que el cliente real ya no reinicie el progreso de picar no tiene aserción: sólo se verifica que el slot no salga. Los otros 13 handlers y el broadcast de `END_SERVER_TICK` no tienen aserción. Para eso está [probar con dos jugadores](../general/probar-con-dos-jugadores.md).
 - **Daño real** (mobs, caída, inanición): los jugadores de prueba son invulnerables. Ver [jugadores de prueba](jugadores-de-prueba.md).
 - **Que `FoodData.tick()` corra una sola vez por tick.** No hay aserción sobre la velocidad de regeneración.
 - **El primer jugador tras instalar el mod** (con `initialized = false`, sus ítems pasan a ser los compartidos). Cuando corre el test, A y B ya marcaron el estado como inicializado.
