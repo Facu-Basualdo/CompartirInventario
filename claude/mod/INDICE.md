@@ -33,3 +33,9 @@ No lances agentes de exploración sobre el código del mod: son 19 clases y todo
 | Nota | De qué trata |
 |---|---|
 | [Muerte y respawn](muerte-y-respawn.md) | Si muere uno, **mueren todos** al final del tick, y `dropAll()` tira los ítems una sola vez · ítems y experiencia caen donde está **el que recibió el golpe**: `killGroup` mata primero a la víctima (con dos golpes simultáneos, la que más vida perdió), no en el orden de `PlayerList` · el hambre se reinicia y la vida queda en `UNKNOWN_HEALTH` hasta que reaparece alguien · el respawn crea un `ServerPlayer` nuevo que se reengancha en el constructor · `replaceWith()` sobre la misma lista es un no-op, no lo "arregles" |
+
+## Comandos
+
+| Nota | De qué trata |
+|---|---|
+| [Intercambiar lugar](intercambiar-lugar.md) | `/intercambiar [jugador]`, sin permisos: cambian posición, dimensión y mirada · sin argumento elige solo si hay un único compañero · no intercambia con un jugador muerto (sigue en `PlayerList`) · se leen las dos ubicaciones antes de mover a nadie · `teleportTo` de `/tp` ya cambia de dimensión, baja del vehículo y despierta · `resetFallDistance()` para que el que venía cayendo no se lastime al aparecer en el piso (la vida es compartida) |

@@ -1,6 +1,7 @@
 package com.inventariocompartido;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -32,6 +33,8 @@ public class InventarioCompartido implements ModInitializer {
 
 		// Lo que cambió durante el tick les llega a todos ahora y no en su próximo tick.
 		ServerTickEvents.END_SERVER_TICK.register(SharedInventorySync::broadcastToAll);
+
+		CommandRegistrationCallback.EVENT.register((dispatcher, buildContext, selection) -> SwapPlaces.register(dispatcher));
 
 		// En singleplayer se pueden abrir varios mundos en la misma sesión: no arrastrar el estado de uno a otro.
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> SharedInventoryState.clearActive());

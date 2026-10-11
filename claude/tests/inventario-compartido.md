@@ -10,6 +10,10 @@
 
 El log dice **"2 GAME TESTS COMPLETE"** y **"All 2 required tests passed"** aunque el nuestro sea uno solo. No hay otro test nuestro duplicado.
 
+## Un test que falla ensucia el siguiente
+
+**Después de un `runGameTest` que falló, borrá `build/run/gameTest/world` antes de volver a correrlo.** El mundo de prueba se reusa y el estado compartido se guarda en él. Un test que pasa termina con la muerte grupal, que deja el inventario vacío y la experiencia en 0; uno que cortó a la mitad deja ítems y niveles, y en la corrida siguiente falla un paso que no tiene nada que ver (por ejemplo "A recibe los 3 niveles de antes del mod de C (nivel 10, esperado 3)").
+
 ## Es una secuencia con ticks en el medio
 
 La vida se reparte en `END_SERVER_TICK` (ver [vida y hambre](../mod/vida-y-hambre.md)), así que el test usa `helper.startSequence()` con `.thenIdle(1)` entre "cambiar la vida" y "verificar". `GameTestServer.tickServer` llama a `super.tickServer` (donde Fabric dispara `END_SERVER_TICK`) antes de correr los tests, así que **un `thenIdle(1)` alcanza**.
@@ -38,9 +42,12 @@ En orden, sobre dos jugadores A y B en supervivencia:
 | A pierde 2 y B pierde 3 en el mismo tick → los dos en 9 | Se suman deltas, no se copia el último | [vida-y-hambre](../mod/vida-y-hambre.md) |
 | `PlayerList.respawn(A, true, …)` | El `ServerPlayer` nuevo comparte inventario y hambre, adopta la vida y la experiencia, y no cura a B | [muerte-y-respawn](../mod/muerte-y-respawn.md) |
 | A junta 20 puntos y B 5 en el mismo tick → los dos en nivel 4; B gasta un nivel → A en 3 | Reparto de experiencia por puntos, y que gastar niveles también se comparte | [experiencia](../mod/experiencia.md) |
+| A en el área y B en el Nether mirando a 90°; A corre `/intercambiar` y después `/intercambiar jugador-b` | Cambian de lugar y de dimensión, A queda mirando a 90°, y con el nombre vuelven a donde estaban | [intercambiar-lugar](../mod/intercambiar-lugar.md) |
 | A (en el área) pierde 5 y B (11 bloques más lejos) pierde 4 en el mismo tick, con 9 de vida | Mueren los dos; las 7 esmeraldas y 21 puntos de orbes (nivel 3 × 7) caen **al lado de A** y nada al lado de B; la experiencia compartida queda en 0; el hambre vuelve a 20 | [muerte-y-respawn](../mod/muerte-y-respawn.md#dónde-caen-los-ítems-y-la-experiencia) |
 
 **Al jugador recreado no le des experiencia (ni vida) en el mismo paso del respawn.** Hasta el primer reparto no está sincronizado: en ese tick adopta lo compartido y lo que le hayas dado se pierde. Por eso los 20 puntos van un `thenIdle(1)` después.
+
+Los comandos se corren con `getCommands().performPrefixedCommand(jugador.createCommandSourceStack(), …)`: un comando que falla no tira excepción, le manda el error al jugador falso y nadie lo ve. Lo que lo detecta es la aserción de posición que sigue.
 
 En la muerte grupal, A es el que más vida pierde (5 contra 4) y B queda lejos para que los drops se distingan. Sin la elección de víctima caerían al lado de B, que queda primero en `PlayerList` porque el respawn agrega a A al final.
 
@@ -52,6 +59,7 @@ En la muerte grupal, A es el que más vida pierde (5 contra 4) y B queda lejos p
 - **El primer jugador tras instalar el mod** (con `initialized = false`, sus ítems pasan a ser los compartidos). Cuando corre el test, A y B ya marcaron el estado como inicializado.
 - **El caso sin lugar para el cofre** (ítems tirados a los pies).
 - **Que el cofre quede en disco.** El guardado forzado (`saveAllChunks`) se verificó a mano pasando `suppressLog = false`: aparecen los "Saving chunks for level…" justo después del log del cofre. Ninguna aserción lo comprueba.
+- **Los casos en que `/intercambiar` se niega** (nadie más, varios sin nombre, un jugador muerto) ni la caída reiniciada.
 - **El guardado y la recarga del `.dat` entre reinicios.** El archivo se escribe (en `build/run/gameTest/world/data/inventariocompartido/`), pero ningún test reinicia el servidor y lo lee.
 
 ## Ver también

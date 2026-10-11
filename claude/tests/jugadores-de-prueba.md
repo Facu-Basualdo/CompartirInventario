@@ -33,6 +33,10 @@ Síntomas con los que se descubrió: `kill()` dejaba al jugador vivo, y la vida 
 
 `die()` es el punto que importa para el mod (dispara `dropEquipment` → `Inventory.dropAll()`), así que saltear el daño no le quita valor al test.
 
+## Después de `PlayerList.respawn`, reenganchá la conexión
+
+**`PlayerList.respawn` no cambia `connection.player`**: en el juego lo hace `ServerGamePacketListenerImpl.handleClientCommand` con lo que devuelve. El test llama a `respawn` directo, así que hace `respawned.connection.player = respawned` a mano. Sin eso, todo lo que pasa por la conexión actúa sobre el jugador viejo: `teleportTo` (que termina en `connection.teleport` → `this.player.teleportSetPosition`) le cambia la dimensión al nuevo pero la posición al viejo, y el nuevo se queda donde reapareció.
+
 ## Cargar un guardado en otro jugador
 
 Para simular "B entra con datos viejos" el test guarda a A con `saveWithoutId` y lo carga en B con `load`. **Sacá `"UUID"` del `CompoundTag` antes de cargarlo**: si no, B queda con el UUID de A, y `PlayerList` (que indexa por UUID) se confunde en los pasos siguientes.

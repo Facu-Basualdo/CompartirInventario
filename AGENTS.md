@@ -40,6 +40,7 @@ El mismo tema en distintas áreas usa el mismo nombre de archivo (`Codex/mod/inv
 | Carga de datos del jugador sin pisar lo compartido, y cofre con los ítems de antes del mod | [carga-de-datos-del-jugador](Codex/mod/carga-de-datos-del-jugador.md) | [inventario-compartido](Codex/tests/inventario-compartido.md) · [jugadores-de-prueba](Codex/tests/jugadores-de-prueba.md) |
 | Experiencia compartida | [experiencia](Codex/mod/experiencia.md) | [inventario-compartido](Codex/tests/inventario-compartido.md) |
 | Muerte grupal y respawn | [muerte-y-respawn](Codex/mod/muerte-y-respawn.md) | [jugadores-de-prueba](Codex/tests/jugadores-de-prueba.md) |
+| Intercambiar lugar (`/intercambiar`) | [intercambiar-lugar](Codex/mod/intercambiar-lugar.md) | [inventario-compartido](Codex/tests/inventario-compartido.md) · [jugadores-de-prueba](Codex/tests/jugadores-de-prueba.md) |
 
 ## Reglas de workflow
 

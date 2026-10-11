@@ -2,6 +2,7 @@ package com.inventariocompartido.test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.mojang.authlib.GameProfile;
@@ -41,10 +42,12 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.phys.Vec3;
 
 public class SharedInventoryGameTest {
 	// Un solo test: lo compartido es global del servidor, así que tests en paralelo se pisarían.
@@ -173,6 +176,7 @@ public class SharedInventoryGameTest {
 
 					// Al recrear al jugador (respawn) sigue compartiendo todo
 					respawned[0] = playerList.respawn(a, true, Entity.RemovalReason.CHANGED_DIMENSION);
+					respawned[0].connection.player = respawned[0]; // en el juego lo hace handleClientCommand: si no, teleportTo mueve al viejo
 					assertCount(helper, respawned[0], Items.EMERALD, 7, "El jugador recreado conserva el inventario compartido");
 					assertFood(helper, respawned[0], 7, "El jugador recreado conserva el hambre compartida");
 					respawned[0].getInventory().add(new ItemStack(Items.GOLD_INGOT, 4));
@@ -199,6 +203,23 @@ public class SharedInventoryGameTest {
 				.thenExecute(() -> {
 					assertLevel(helper, respawned[0], 3, "A ve los niveles que gastó B");
 
+					// /intercambiar sin argumento: con un solo compañero, cambian de lugar, de dimensión y de mirada
+					ServerLevel overworld = helper.getLevel();
+					ServerLevel nether = overworld.getServer().getLevel(Level.NETHER);
+					Vec3 inOverworld = Vec3.atBottomCenterOf(helper.absolutePos(new BlockPos(1, 1, 1)));
+					Vec3 inNether = new Vec3(0.5, 100, 0.5);
+					respawned[0].teleportTo(overworld, inOverworld.x, inOverworld.y, inOverworld.z, Set.of(), 0, 0, true);
+					b.teleportTo(nether, inNether.x, inNether.y, inNether.z, Set.of(), 90, 0, true);
+					runCommand(respawned[0], "intercambiar");
+					assertAt(helper, respawned[0], nether, inNether, "A queda donde estaba B, en el Nether");
+					assertAt(helper, b, overworld, inOverworld, "B queda donde estaba A");
+					helper.assertTrue(respawned[0].getYRot() == 90, Component.literal("A mira para donde miraba B (yRot " + respawned[0].getYRot() + ")"));
+
+					// …y nombrando al compañero
+					runCommand(respawned[0], "intercambiar jugador-b");
+					assertAt(helper, respawned[0], overworld, inOverworld, "A vuelve a su lugar");
+					assertAt(helper, b, nether, inNether, "B vuelve a su lugar");
+
 					// Si uno muere, mueren todos, y el inventario y la experiencia caen una sola vez, donde está el
 					// que recibió el golpe. Los dos reciben daño en el mismo tick y ninguno llega a 0 solo: la vida
 					// compartida sí. Los jugadores de prueba son invulnerables (no tienen cliente real), así que el
@@ -206,7 +227,7 @@ public class SharedInventoryGameTest {
 					BlockPos here = helper.absolutePos(new BlockPos(1, 1, 1));
 					BlockPos away = helper.absolutePos(new BlockPos(1, 1, 12));
 					respawned[0].teleportTo(here.getX() + 0.5, here.getY(), here.getZ() + 0.5);
-					b.teleportTo(away.getX() + 0.5, away.getY(), away.getZ() + 0.5);
+					b.teleportTo(overworld, away.getX() + 0.5, away.getY(), away.getZ() + 0.5, Set.of(), 0, 0, true); // vuelve del Nether
 					respawned[0].setHealth(4);
 					b.setHealth(5);
 				})
@@ -335,6 +356,15 @@ public class SharedInventoryGameTest {
 	private static int droppedExperience(ServerPlayer player) {
 		return player.level().getEntitiesOfClass(ExperienceOrb.class, player.getBoundingBox().inflate(4))
 				.stream().mapToInt(ExperienceOrb::getValue).sum();
+	}
+
+	private static void runCommand(ServerPlayer player, String command) {
+		player.level().getServer().getCommands().performPrefixedCommand(player.createCommandSourceStack(), command);
+	}
+
+	private static void assertAt(GameTestHelper helper, ServerPlayer player, ServerLevel level, Vec3 expected, String message) {
+		boolean there = player.level() == level && player.position().distanceTo(expected) < 0.01;
+		helper.assertTrue(there, Component.literal(message + " (está en " + player.level().dimension().identifier() + " " + player.position() + ")"));
 	}
 
 	private static void assertLevel(GameTestHelper helper, Player player, int expected, String message) {

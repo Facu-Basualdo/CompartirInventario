@@ -40,6 +40,7 @@ El mismo tema en distintas áreas usa el mismo nombre de archivo (`claude/mod/in
 | Carga de datos del jugador sin pisar lo compartido, y cofre con los ítems de antes del mod | [carga-de-datos-del-jugador](claude/mod/carga-de-datos-del-jugador.md) | [inventario-compartido](claude/tests/inventario-compartido.md) · [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
 | Experiencia compartida | [experiencia](claude/mod/experiencia.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
 | Muerte grupal y respawn | [muerte-y-respawn](claude/mod/muerte-y-respawn.md) | [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
+| Intercambiar lugar (`/intercambiar`) | [intercambiar-lugar](claude/mod/intercambiar-lugar.md) | [inventario-compartido](claude/tests/inventario-compartido.md) · [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
 
 ## Reglas de workflow
 
