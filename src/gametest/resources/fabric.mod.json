@@ -2,7 +2,7 @@
 	"schemaVersion": 1,
 	"id": "inventariocompartido-test",
 	"version": "1.0.0",
-	"name": "Inventario Compartido - Tests",
+	"name": "Soul Link - Tests",
 	"environment": "*",
 	"entrypoints": {
 		"fabric-gametest": [

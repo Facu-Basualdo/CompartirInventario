@@ -1,4 +1,6 @@
-# Inventario Compartido
+# Soul Link
+
+*(Antes se llamaba "Inventario Compartido".)*
 
 Mod de Fabric para **Minecraft Java 26.3** en el que todos los jugadores del servidor comparten, en tiempo real:
 
@@ -43,8 +45,9 @@ Además, con **`/intercambiar`** cambiás de lugar con tu compañero.
 
 Toda la lógica corre en el servidor.
 
-- **Servidor dedicado:** copiá `inventariocompartido-<versión>.jar` y Fabric API a la carpeta `mods/` del servidor. El mod no agrega bloques, ítems ni paquetes propios, así que en principio los clientes no lo necesitan, pero no se probó con clientes vanilla.
+- **Servidor dedicado:** copiá `soullink-<versión>.jar` y Fabric API a la carpeta `mods/` del servidor. El mod no agrega bloques, ítems ni paquetes propios, así que en principio los clientes no lo necesitan, pero no se probó con clientes vanilla.
 - **Singleplayer o LAN:** instalalo en el cliente del que abre el mundo, junto con Fabric API.
+- **Si venís de una versión anterior:** borrá el `inventariocompartido-<versión>.jar` viejo de `mods/`. Si quedan los dos, Fabric no arranca porque tienen el mismo mod id. Los mundos siguen funcionando igual.
 
 ## Compilar
 

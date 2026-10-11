@@ -9,5 +9,5 @@ pluginManagement {
 	}
 }
 
-// Should match your modid
-rootProject.name = 'inventariocompartido'
+// Nombre del jar (soullink-<versión>.jar). El mod id sigue siendo inventariocompartido.
+rootProject.name = 'soullink'

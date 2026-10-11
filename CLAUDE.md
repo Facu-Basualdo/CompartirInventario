@@ -1,4 +1,4 @@
-# Inventario Compartido — mod de Minecraft
+# Soul Link — mod de Minecraft
 
 Mod de Fabric para **Minecraft Java 26.3** que hace que todos los jugadores del servidor compartan en tiempo real un único inventario (inventario, barra rápida, armadura y mano secundaria), una sola barra de hambre, una sola barra de vida y una sola barra de experiencia. Java 25, Gradle 9.7 + Fabric Loom 1.18, Fabric Loader 0.19.5, Fabric API 0.162.0+26.3. Toda la lógica corre en el servidor.
 

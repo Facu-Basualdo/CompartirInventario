@@ -91,7 +91,7 @@ public final class PersonalItemsChest {
 	}
 
 	private static String message(List<BlockPos> chests, boolean dropped) {
-		StringBuilder text = new StringBuilder("[Inventario Compartido] Tus ítems de antes de instalar el mod ");
+		StringBuilder text = new StringBuilder("[Soul Link] Tus ítems de antes de instalar el mod ");
 		if (!chests.isEmpty()) {
 			text.append(chests.size() == 1 ? "están en el cofre de " : "están en los cofres de ");
 			for (int i = 0; i < chests.size(); i++) {
