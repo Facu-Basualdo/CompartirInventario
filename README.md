@@ -1,5 +1,7 @@
 # Soul Link
 
+<p align="center"><img src="src/main/resources/assets/inventariocompartido/icon.png" alt="Soul Link" width="256"></p>
+
 *(Antes se llamaba "Inventario Compartido".)*
 
 Mod de Fabric para **Minecraft Java 26.3** en el que todos los jugadores del servidor comparten, en tiempo real:
