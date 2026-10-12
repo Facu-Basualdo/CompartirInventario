@@ -264,7 +264,7 @@ public class SharedInventoryGameTest {
 					helper.assertTrue(respawned[0].getYRot() == 90, Component.literal("A mira para donde miraba B (yRot " + respawned[0].getYRot() + ")"));
 
 					// …y nombrando al compañero
-					runCommand(respawned[0], "intercambiar jugador-b");
+					runCommand(respawned[0], "swap jugador-b"); // el mismo comando en inglés
 					assertAt(helper, respawned[0], overworld, inOverworld, "A vuelve a su lugar");
 					assertAt(helper, b, nether, inNether, "B vuelve a su lugar");
 
@@ -318,7 +318,7 @@ public class SharedInventoryGameTest {
 				.thenExecute(() -> {
 					assertLevel(helper, four[3], 3, "Sin grupos, los cuatro comparten la experiencia");
 					runServerCommand(helper, "soullink grupo " + red + " grupo-0 grupo-1");
-					runServerCommand(helper, "soullink grupo " + blue + " grupo-2 grupo-3");
+					runServerCommand(helper, "soullink group " + blue + " grupo-2 grupo-3"); // en inglés
 					helper.assertTrue(world.groupIdOf(four[1].getGameProfile().id()).equals(red) && world.groupIdOf(four[3].getGameProfile().id()).equals(blue),
 							Component.literal("/soullink grupo arma los dos grupos"));
 

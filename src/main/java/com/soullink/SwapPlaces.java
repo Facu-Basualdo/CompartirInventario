@@ -20,23 +20,19 @@ import net.minecraft.server.level.ServerPlayer;
  * Nombrándolo, sirve con cualquiera, aunque sea de otro grupo.
  */
 public final class SwapPlaces {
-	private static final SimpleCommandExceptionType NOBODY = new SimpleCommandExceptionType(
-			Component.literal("No hay nadie de tu grupo conectado: usá /intercambiar <jugador>"));
-	private static final SimpleCommandExceptionType AMBIGUOUS = new SimpleCommandExceptionType(
-			Component.literal("Hay varios en tu grupo: usá /intercambiar <jugador>"));
-	private static final SimpleCommandExceptionType SELF = new SimpleCommandExceptionType(
-			Component.literal("No podés intercambiar lugar con vos mismo"));
-	private static final SimpleCommandExceptionType DEAD = new SimpleCommandExceptionType(
-			Component.literal("No se puede intercambiar lugar mientras alguno de los dos está muerto"));
+	/** El mismo comando con nombre en español y en inglés. */
+	private static final List<String> NAMES = List.of("intercambiar", "swap");
 
 	private SwapPlaces() {
 	}
 
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-		dispatcher.register(Commands.literal("intercambiar")
-				.executes(context -> swap(context.getSource().getPlayerOrException(), onlyPartner(context.getSource())))
-				.then(Commands.argument("jugador", EntityArgument.player())
-						.executes(context -> swap(context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "jugador")))));
+		for (String name : NAMES) {
+			dispatcher.register(Commands.literal(name)
+					.executes(context -> swap(context.getSource().getPlayerOrException(), onlyPartner(context.getSource())))
+					.then(Commands.argument("jugador", EntityArgument.player())
+							.executes(context -> swap(context.getSource().getPlayerOrException(), EntityArgument.getPlayer(context, "jugador")))));
+		}
 	}
 
 	private static ServerPlayer onlyPartner(CommandSourceStack source) throws CommandSyntaxException {
@@ -47,21 +43,21 @@ public final class SwapPlaces {
 				.filter(player -> player != self && state.groupIdOf(player.getGameProfile().id()).equals(group))
 				.toList();
 		if (others.isEmpty()) {
-			throw NOBODY.create();
+			throw error(self, "soullink.swap.nobody");
 		}
 		if (others.size() > 1) {
-			throw AMBIGUOUS.create();
+			throw error(self, "soullink.swap.ambiguous");
 		}
 		return others.getFirst();
 	}
 
 	public static int swap(ServerPlayer self, ServerPlayer other) throws CommandSyntaxException {
 		if (self == other) {
-			throw SELF.create();
+			throw error(self, "soullink.swap.self");
 		}
 		// Un jugador en la pantalla de muerte sigue en PlayerList; teletransportarlo no lo revive.
 		if (self.isDeadOrDying() || other.isDeadOrDying()) {
-			throw DEAD.create();
+			throw error(self, "soullink.swap.dead");
 		}
 
 		Place selfPlace = Place.of(self);
@@ -69,9 +65,14 @@ public final class SwapPlaces {
 		otherPlace.moveHere(self);
 		selfPlace.moveHere(other);
 
-		self.sendSystemMessage(Component.literal("Intercambiaste lugar con ").append(other.getDisplayName()));
-		other.sendSystemMessage(self.getDisplayName().copy().append(" intercambió lugar con vos"));
+		self.sendSystemMessage(Lang.tr(self, "soullink.swap.done", other.getDisplayName()));
+		other.sendSystemMessage(Lang.tr(other, "soullink.swap.done_other", self.getDisplayName()));
 		return 1;
+	}
+
+	/** En el idioma de quien lo usó: por eso no son constantes, como suelen ser los errores de comando. */
+	private static CommandSyntaxException error(ServerPlayer player, String key) {
+		return new SimpleCommandExceptionType(Lang.tr(player, key)).create();
 	}
 
 	/** Se toman las dos antes de mover a nadie: si no, el segundo iría a donde ya llegó el primero. */

@@ -12,8 +12,15 @@
 |---|---|
 | No existe | Se crea, y lo leído es `SoulLinkConfig.DEFAULT` |
 | `compartirExperiencia: false`, `anunciarMuertes: "sí"`, `barraLateral: "mobs"`, `corazonesDeSusto: 50` | Se respetan los dos válidos; los dos inválidos usan el default; hay exactamente 2 avisos; el archivo **no** se reescribe (sigue diciendo `"sí"`) |
+| `idioma: "es_ar"` y después `"klingon"` | Se respeta el primero; el segundo usa `en_us` con un aviso |
 | Sólo `barraLateral: "ninguna"` | La barra queda vacía, y las claves que faltan se agregan al archivo |
 | `{ roto` | `ok()` da false |
+
+## Idioma, aparte
+
+`LangGameTest` verifica que `en_us.json` y `es_ar.json` tengan las mismas claves (una que falta se vería en el otro idioma), que `es_MX` y `es_es` vayan a `es_ar`, `en_gb` a `en_us` y `fr_fr` al de la config, que los `%s` se reemplacen en orden con un `Component` como argumento, y la coma decimal. No toca el estado del servidor. Los jugadores de prueba informan `en_us` (`ClientInformation.createDefault()`), así que el test grande corre en inglés, pero no compara textos.
+
+El test grande usa `/swap` y `/soullink group` en un paso cada uno, para cubrir los nombres en inglés.
 
 ## Qué NO cubre
 
@@ -24,3 +31,4 @@
 
 - [Configuración (mod)](../mod/configuracion.md)
 - [Inventario compartido](inventario-compartido.md): el test grande, donde están las aserciones de estadísticas.
+- [Idioma (mod)](../mod/idioma.md)

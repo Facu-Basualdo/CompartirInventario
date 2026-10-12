@@ -33,6 +33,20 @@ public final class StatsScoreboard {
 		applySidebar(server);
 	}
 
+	/**
+	 * Los títulos son uno solo para todos los que miran la barra, así que van en el idioma de la config. Se
+	 * reescriben al arrancar y al recargar: los objetivos quedan guardados en el mundo con el título de antes.
+	 */
+	private static void applyTitles(ServerScoreboard scoreboard) {
+		for (GroupStats.Stat stat : GroupStats.Stat.values()) {
+			Objective objective = objective(scoreboard, stat);
+			Component title = stat.displayName(SoulLink.config().language());
+			if (!objective.getDisplayName().equals(title)) {
+				objective.setDisplayName(title);
+			}
+		}
+	}
+
 	public static void update(MinecraftServer server, GroupStats.PlayerStats player) {
 		ServerScoreboard scoreboard = server.getScoreboard();
 		ScoreHolder holder = ScoreHolder.forNameOnly(player.name());
@@ -47,6 +61,7 @@ public final class StatsScoreboard {
 	 */
 	public static void applySidebar(MinecraftServer server) {
 		ServerScoreboard scoreboard = server.getScoreboard();
+		applyTitles(scoreboard);
 		@Nullable Objective current = scoreboard.getDisplayObjective(DisplaySlot.SIDEBAR);
 		if (current != null && !isOurs(current)) {
 			SoulLink.config().sidebar().ifPresent(stat -> SoulLink.LOGGER.info(
@@ -83,7 +98,7 @@ public final class StatsScoreboard {
 	private static Objective objective(ServerScoreboard scoreboard, GroupStats.Stat stat) {
 		@Nullable Objective objective = scoreboard.getObjective(objectiveName(stat));
 		if (objective == null) {
-			objective = scoreboard.addObjective(objectiveName(stat), ObjectiveCriteria.DUMMY, Component.literal(stat.displayName()),
+			objective = scoreboard.addObjective(objectiveName(stat), ObjectiveCriteria.DUMMY, stat.displayName(SoulLink.config().language()),
 					ObjectiveCriteria.RenderType.INTEGER, false, null);
 		}
 		return objective;

@@ -24,6 +24,7 @@ Para ofrecerlo habría que dejar de escribir la marca mientras está apagado y r
 | `anunciarMuertes` | bool | `true` | `SharedVitals.recordGroupDeath` |
 | `barraLateral` | `culpas` · `corazones` · `sustos` · `experiencia` · `mobs` · `ninguna` | `culpas` | `StatsScoreboard.applySidebar` |
 | `corazonesDeSusto` | número de 0 a 10 | `2` | `SharedVitals.syncHealth` |
+| `idioma` | `en_us` · `es_ar` | `en_us` | `Lang`: la consola, los títulos del scoreboard y los clientes con un idioma que no tenemos (ver [idioma](idioma.md)) |
 
 Las claves están en español y en camelCase, como en Hero's Forge, Bloodmoon y Mythic Loot. Los ids de `barraLateral` son los de `GroupStats.Stat`, y el nombre del objetivo del scoreboard sale de ahí mismo (`soullink_<id>`).
 
@@ -36,7 +37,7 @@ Mismo patrón que `ArchivoDeConfiguracion` de los otros mods:
 - **Falta una clave** (por ejemplo, después de actualizar el mod): se reescribe el archivo con lo leído más la clave nueva, para que el dueño vea que existe. **Con avisos no se reescribe**: se perdería el valor mal escrito en vez de dejárselo para que lo corrija.
 - `corazonesDeSusto` entero se escribe como `2`, no `2.0` (Gson escribe los `double` con decimal).
 
-Los avisos van al log con `[config]` y, con `/soullink recargar`, también al chat del que lo corrió.
+Los avisos son `SoulLinkConfig.Warning` (clave y argumentos), no texto: se traducen al mostrarlos. Van al log con `[config]` en el idioma de la config recién leída y, con `/soullink recargar`, también al chat del que lo corrió, en su idioma.
 
 ## Apagar la experiencia compartida
 
@@ -54,3 +55,4 @@ Con `compartirExperiencia: false`:
 - [Experiencia](experiencia.md)
 - [Inventario compartido](inventario-compartido.md): por qué el reparto por referencia no se puede apagar en caliente.
 - [Tests: configuración](../tests/configuracion.md)
+- [Idioma](idioma.md): cómo se elige el idioma de cada mensaje.

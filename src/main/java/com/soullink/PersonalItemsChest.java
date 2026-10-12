@@ -7,6 +7,7 @@ import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
@@ -64,7 +65,7 @@ public final class PersonalItemsChest {
 		// una sola vez por jugador. force=false respeta /save-off.
 		player.level().getServer().saveAllChunks(true, true, false);
 
-		player.sendSystemMessage(Component.literal(message(chests, dropped)));
+		player.sendSystemMessage(message(Lang.of(player), chests, dropped));
 	}
 
 	/**
@@ -90,20 +91,19 @@ public final class PersonalItemsChest {
 		return null;
 	}
 
-	private static String message(List<BlockPos> chests, boolean dropped) {
-		StringBuilder text = new StringBuilder("[Soul Link] Tus ítems de antes de instalar el mod ");
-		if (!chests.isEmpty()) {
-			text.append(chests.size() == 1 ? "están en el cofre de " : "están en los cofres de ");
-			for (int i = 0; i < chests.size(); i++) {
-				BlockPos pos = chests.get(i);
-				text.append(i == 0 ? "" : " y ").append(pos.getX()).append(' ').append(pos.getY()).append(' ').append(pos.getZ());
-			}
-			if (dropped) {
-				text.append("; lo que no entró quedó tirado a tus pies");
-			}
-		} else {
-			text.append("quedaron tirados a tus pies (no había lugar para un cofre)");
+	private static Component message(String language, List<BlockPos> chests, boolean dropped) {
+		if (chests.isEmpty()) {
+			return Lang.tr(language, "soullink.chest.none");
 		}
-		return text.append('.').toString();
+		StringBuilder where = new StringBuilder();
+		for (int i = 0; i < chests.size(); i++) {
+			BlockPos pos = chests.get(i);
+			where.append(i == 0 ? "" : Lang.raw(language, "soullink.chest.and")).append(pos.getX()).append(' ').append(pos.getY()).append(' ').append(pos.getZ());
+		}
+		MutableComponent text = Lang.tr(language, chests.size() == 1 ? "soullink.chest.one" : "soullink.chest.many", where.toString());
+		if (dropped) {
+			text.append(" ").append(Lang.tr(language, "soullink.chest.overflow"));
+		}
+		return text;
 	}
 }

@@ -3,8 +3,15 @@
 	"id": "soullink",
 	"version": "${version}",
 	"name": "Soul Link",
-	"description": "Los jugadores vinculados comparten un único inventario (inventario, barra rápida, armadura y mano secundaria), el hambre, la vida y la experiencia en tiempo real. Podés vincular a todos o armar grupos (2 y 2, o como quieras). Cuenta los intentos y de quién fue la culpa de cada muerte (/soullink).",
-	"authors": [],
+	"description": "Linked players share one inventory (main, hotbar, armor and offhand), hunger, health and experience in real time. Link everyone or split players into groups (2 and 2, or however you like). Tracks attempts and whose fault each death was (/soullink). Server-side: vanilla clients can join.",
+	"authors": [
+		"FacuBas"
+	],
+	"contact": {
+		"homepage": "https://github.com/Facu-Basualdo/CompartirInventario",
+		"sources": "https://github.com/Facu-Basualdo/CompartirInventario",
+		"issues": "https://github.com/Facu-Basualdo/CompartirInventario/issues"
+	},
 	"license": "MIT",
 	"icon": "assets/soullink/icon.png",
 	"environment": "*",

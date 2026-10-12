@@ -9,7 +9,8 @@
 			"com.soullink.test.SharedInventoryGameTest",
 			"com.soullink.test.IdMigrationGameTest",
 			"com.soullink.test.ConfigGameTest",
-			"com.soullink.test.OldSaveGameTest"
+			"com.soullink.test.OldSaveGameTest",
+			"com.soullink.test.LangGameTest"
 		]
 	},
 	"depends": {

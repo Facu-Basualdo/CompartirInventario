@@ -13,7 +13,7 @@ Lo que agarra uno le aparece al otro, si a uno le pegan les baja la vida a todos
 
 Por defecto están vinculados todos los del servidor. Con **`/soullink grupo`** podés armar grupos separados: 2 y 2, 3 y 1, o como quieras.
 
-Además, con **`/intercambiar`** cambiás de lugar con tu compañero, y **`/soullink`** lleva la cuenta de cuántas veces murieron y de quién fue la culpa.
+Los mensajes salen en el idioma de cada jugador (español o inglés), y los comandos existen en los dos. Además, con **`/intercambiar`** (o `/swap`) cambiás de lugar con tu compañero, y **`/soullink`** lleva la cuenta de cuántas veces murieron y de quién fue la culpa.
 
 ## Cómo funciona
 
@@ -33,6 +33,16 @@ Además, con **`/intercambiar`** cambiás de lugar con tu compañero, y **`/soul
 - **`/intercambiar [jugador]`:** te pone donde está tu compañero y a él donde estás vos, aunque estén en otra dimensión. Con más de un jugador conectado, nombralo. No hace falta ser operador.
 - **Todo se guarda en el mundo**, no en cada jugador: si alguien se desconecta con poca vida, el que entre después arranca con esa vida.
 - **En un mundo que ya tiene partida:** el primer jugador que entra aporta sus ítems y su hambre. A los demás no se les pierde nada: la primera vez que entran, sus ítems aparecen en un cofre a su lado, y su experiencia se suma a la compartida.
+
+## Idiomas
+
+Cada jugador ve los mensajes en el idioma que tiene puesto en su juego: español o inglés (cualquier variante, como `es_mx` o `en_gb`). Con otro idioma, o en la consola, se usa el de la opción `idioma` de la config. Los comandos existen en los dos:
+
+| Español | Inglés |
+|---|---|
+| `/intercambiar` | `/swap` |
+| `/soullink grupo`, `grupos`, `quitar` | `/soullink group`, `groups`, `remove` |
+| `/soullink recargar`, `stats reiniciar` | `/soullink reload`, `stats reset` |
 
 ## Grupos
 
@@ -81,7 +91,8 @@ Cada vez que muere el grupo termina un **intento**. El mod lleva la cuenta de lo
   "compartirExperiencia": true,
   "anunciarMuertes": true,
   "barraLateral": "culpas",
-  "corazonesDeSusto": 2
+  "corazonesDeSusto": 2,
+  "idioma": "en_us"
 }
 ```
 
@@ -91,6 +102,7 @@ Cada vez que muere el grupo termina un **intento**. El mod lleva la cuenta de lo
 | `anunciarMuertes` | El mensaje en el chat cuando muere el grupo |
 | `barraLateral` | Qué estadística mostrar: `culpas`, `corazones`, `sustos`, `experiencia`, `mobs` o `ninguna` |
 | `corazonesDeSusto` | Desde cuántos corazones un golpe cuenta como susto (de 0 a 10; con 0 no se cuentan) |
+| `idioma` | `en_us` o `es_ar`: el de la consola, los títulos de la barra lateral y los jugadores con un idioma que el mod no tiene. Cada jugador ve los mensajes en el idioma de su juego |
 
 Después de editarlo, **`/soullink recargar`** (operadores) lo aplica sin reiniciar. Un valor mal escrito usa el valor por defecto y avisa en el chat y en el log, sin descartar el resto del archivo.
 

@@ -51,7 +51,7 @@ Se guarda en `data/soullink/stats.dat`, **aparte de `shared_inventory.dat`**. Lo
 
 **La barra lateral no se pisa si la ocupa otro.** `applySidebar` sólo la cambia si está vacía o muestra uno de los nuestros. Un datapack o minijuego que ya la usa queda como está y se deja un `info` en el log. Con `barraLateral: ninguna` se saca la nuestra, pero no la de otro.
 
-Los corazones van redondeados a entero en el scoreboard (sólo enteros) y con medio corazón de precisión en `/soullink`.
+Los títulos de los objetivos salen del archivo de idioma (`soullink.stat.<id>`) en el idioma de la config, y se reescriben al arrancar y al recargar: ver [idioma](idioma.md). Los corazones van redondeados a entero en el scoreboard (sólo enteros) y con medio corazón de precisión en `/soullink`.
 
 ## Comando
 
@@ -66,3 +66,4 @@ Los corazones van redondeados a entero en el scoreboard (sólo enteros) y con me
 - [Persistencia](persistencia.md)
 - [Tests: inventario compartido](../tests/inventario-compartido.md)
 - [Grupos vinculados](grupos.md): lo compartido es de cada grupo, no del servidor.
+- [Idioma](idioma.md): los mensajes y los títulos del scoreboard.

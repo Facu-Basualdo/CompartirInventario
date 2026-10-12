@@ -28,7 +28,8 @@ public class SoulLink implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		SoulLinkConfig.Reading reading = SoulLinkConfig.load(configFile());
-		reading.warnings().forEach(warning -> LOGGER.warn("[config] {}", warning));
+		String logLanguage = reading.ok() ? reading.config().language() : Lang.ENGLISH;
+		reading.warnings().forEach(warning -> LOGGER.warn("[config] {}", warning.in(logLanguage).getString()));
 		if (reading.ok()) {
 			config = reading.config();
 		} else {

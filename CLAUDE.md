@@ -45,6 +45,7 @@ El mismo tema en distintas áreas usa el mismo nombre de archivo (`claude/mod/in
 | Migración del id (`inventariocompartido` → `soullink`) | [migracion-de-id](claude/mod/migracion-de-id.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
 | Grupos vinculados (`/soullink grupo`, `SoulLinkApi`) | [grupos](claude/mod/grupos.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
 | Estadísticas (`/soullink`, scoreboard) | [estadisticas](claude/mod/estadisticas.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
+| Idioma de los mensajes (`Lang`, comandos en inglés) | [idioma](claude/mod/idioma.md) | [configuracion](claude/tests/configuracion.md) |
 | Configuración (`config/soullink.json`) | [configuracion](claude/mod/configuracion.md) | [configuracion](claude/tests/configuracion.md) |
 | Intercambiar lugar (`/intercambiar`) | [intercambiar-lugar](claude/mod/intercambiar-lugar.md) | [inventario-compartido](claude/tests/inventario-compartido.md) · [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
 

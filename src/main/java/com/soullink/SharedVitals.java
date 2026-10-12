@@ -148,11 +148,13 @@ public final class SharedVitals {
 	private static void recordGroupDeath(GroupStats stats, String groupId, ServerPlayer victim, DamageSource source) {
 		GroupStats.Death death = stats.recordGroupDeath(groupId, victim, source.getLocalizedDeathMessage(victim));
 		if (SoulLink.config().announceDeaths()) {
-			String group = groupId.equals(SharedInventoryState.GENERAL) ? "" : "Grupo " + groupId + ": ";
-			victim.level().getServer().getPlayerList().broadcastSystemMessage(Component.literal("☠ " + group + "terminó el intento #" + death.attempt()
-					+ " después de " + GroupStats.formatTime(death.ticks()) + ". Culpa de ").withStyle(ChatFormatting.RED)
-					.append(victim.getDisplayName())
-					.append(Component.literal(" (récord: " + GroupStats.formatTime(stats.run(groupId).bestTicks()) + ")").withStyle(ChatFormatting.GRAY)), false);
+			String time = GroupStats.formatTime(death.ticks());
+			String record = GroupStats.formatTime(stats.run(groupId).bestTicks());
+			Lang.broadcast(victim.level().getServer(), language -> (groupId.equals(SharedInventoryState.GENERAL)
+					? Lang.tr(language, "soullink.death.announce", death.attempt(), time, victim.getDisplayName())
+					: Lang.tr(language, "soullink.death.announce_group", groupId, death.attempt(), time, victim.getDisplayName()))
+					.withStyle(ChatFormatting.RED)
+					.append(Lang.tr(language, "soullink.death.record", record).withStyle(ChatFormatting.GRAY)));
 		}
 	}
 }

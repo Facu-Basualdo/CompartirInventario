@@ -36,28 +36,27 @@ public class GroupStats extends SavedData {
 
 	/** Lo que se muestra por jugador, en el chat y como objetivo del scoreboard. */
 	public enum Stat {
-		FAULTS("culpas", "Culpas", player -> player.faults),
-		HEARTS_LOST("corazones", "Corazones perdidos", player -> Math.round(player.damage / 2)),
-		SCARES("sustos", "Sustos", player -> player.scares),
-		EXPERIENCE("experiencia", "Experiencia juntada", player -> (int) Math.min(Integer.MAX_VALUE, Math.round(player.experience))),
-		MOBS("mobs", "Mobs matados", player -> player.mobs);
+		FAULTS("culpas", player -> player.faults),
+		HEARTS_LOST("corazones", player -> Math.round(player.damage / 2)),
+		SCARES("sustos", player -> player.scares),
+		EXPERIENCE("experiencia", player -> (int) Math.min(Integer.MAX_VALUE, Math.round(player.experience))),
+		MOBS("mobs", player -> player.mobs);
 
 		private final String id;
-		private final String displayName;
 		private final ToIntFunction<PlayerStats> value;
 
-		Stat(String id, String displayName, ToIntFunction<PlayerStats> value) {
+		Stat(String id, ToIntFunction<PlayerStats> value) {
 			this.id = id;
-			this.displayName = displayName;
 			this.value = value;
 		}
 
+		/** Va en la config ({@code barraLateral}) y en el objetivo del scoreboard: no se traduce. */
 		public String id() {
 			return this.id;
 		}
 
-		public String displayName() {
-			return this.displayName;
+		public Component displayName(String language) {
+			return Lang.tr(language, "soullink.stat." + this.id);
 		}
 
 		public int of(PlayerStats player) {

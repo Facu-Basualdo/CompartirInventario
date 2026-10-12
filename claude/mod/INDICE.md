@@ -11,7 +11,7 @@ Java 25 · Fabric API 0.162.0+26.3 · Mixins sobre Minecraft 26.3 (nombres de Mo
 3. Verificá la firma real del método con `javap` (ver [minecraft-26-sin-ofuscar](../general/minecraft-26-sin-ofuscar.md)) en vez de confiar en tutoriales o en memoria.
 4. Corré `gradlew runGameTest`.
 
-No lances agentes de exploración sobre el código del mod: son 28 clases y todo lo que no dicen está en estas notas.
+No lances agentes de exploración sobre el código del mod: son 29 clases y todo lo que no dicen está en estas notas.
 
 ## Fundamentos
 
@@ -45,7 +45,8 @@ No lances agentes de exploración sobre el código del mod: son 28 clases y todo
 | Nota | De qué trata |
 |---|---|
 | [Estadísticas](estadisticas.md) | Sin listeners propios: salen de los **mismos deltas** de `syncHealth` y `SharedExperience.sync` · el daño se suma **antes** de `killGroup` (el golpe final cuenta) · culpa = la víctima que ya elige `syncHealth` · el reloj del intento sólo corre con un participante vivo conectado, y va después de la vida en `END_SERVER_TICK` · la causa se guarda como `Component` (traducible), no como texto · `data/soullink/stats.dat` aparte del inventario · jugadores por UUID · el scoreboard es una copia: se reescribe en `SERVER_STARTED` · la barra lateral no se pisa si la ocupa un objetivo ajeno |
-| [Configuración](configuracion.md) | `config/soullink.json` con 4 claves · **inventario, hambre y vida no se pueden apagar**: duplicaría ítems (cada `playerdata` tiene una copia) o los perdería (la marca impide rescatarlos) · campo inválido = default + aviso, JSON roto = se queda la config anterior · con avisos no se reescribe el archivo · al volver a prender la experiencia, todos adoptan la guardada y pierden la propia |
+| [Idioma](idioma.md) | **Lo traduce el servidor** (`Lang.tr`, `Component` literal): un `Component.translatable` le llega a un cliente vanilla como la clave · idioma del cliente (`clientInformation().language()`), `es*` → `es_ar`, `en*` → `en_us`, otro → `idioma` de la config · títulos del scoreboard y consola en el de la config · a todo el servidor con `Lang.broadcast`, uno por jugador · los dos archivos con las mismas claves (`LangGameTest`) · comandos duplicados en inglés (`/swap`, `group`, `reload`…), no redirects · los ids y las claves de la config no se traducen |
+| [Configuración](configuracion.md) | `config/soullink.json` con 5 claves · **inventario, hambre y vida no se pueden apagar**: duplicaría ítems (cada `playerdata` tiene una copia) o los perdería (la marca impide rescatarlos) · campo inválido = default + aviso, JSON roto = se queda la config anterior · con avisos no se reescribe el archivo · al volver a prender la experiencia, todos adoptan la guardada y pierden la propia |
 
 ## Comandos
 

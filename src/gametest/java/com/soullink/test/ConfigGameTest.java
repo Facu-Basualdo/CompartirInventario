@@ -38,6 +38,15 @@ public class ConfigGameTest {
 		helper.assertTrue(mixed.warnings().size() == 2, Component.literal("Avisa de los dos valores mal escritos (" + mixed.warnings() + ")"));
 		helper.assertTrue(Files.readString(file, StandardCharsets.UTF_8).contains("\"sí\""), Component.literal("Con avisos no se reescribe el archivo"));
 
+		// El idioma: uno que tenemos se respeta, otro usa inglés y avisa
+		Files.writeString(file, "{ \"idioma\": \"es_ar\" }", StandardCharsets.UTF_8);
+		SoulLinkConfig.Reading spanish = SoulLinkConfig.load(file);
+		helper.assertTrue(spanish.config() != null && spanish.config().language().equals("es_ar"), Component.literal("Se respeta idioma: es_ar"));
+		Files.writeString(file, "{ \"idioma\": \"klingon\" }", StandardCharsets.UTF_8);
+		SoulLinkConfig.Reading unknown = SoulLinkConfig.load(file);
+		helper.assertTrue(unknown.config() != null && unknown.config().language().equals("en_us") && unknown.warnings().size() == 1,
+				Component.literal("Un idioma que no hay usa en_us y avisa"));
+
 		// "ninguna" apaga la barra lateral
 		Files.writeString(file, "{ \"barraLateral\": \"ninguna\" }", StandardCharsets.UTF_8);
 		SoulLinkConfig.Reading none = SoulLinkConfig.load(file);
