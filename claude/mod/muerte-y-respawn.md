@@ -6,7 +6,7 @@
 
 ## Muerte
 
-El que recibe el golpe final muere en el momento, por el camino normal de vanilla. Los demás mueren **al final de ese tick**, cuando `SharedVitals` ve que la vida compartida llegó a 0 y les hace `setHealth(0)` + `die()` (detalle en [vida y hambre](vida-y-hambre.md#muerte-del-grupo)). Cada uno ve su pantalla de muerte y reaparece por su cuenta.
+**Mueren los del grupo vinculado de la víctima, no todo el servidor** (ver [grupos vinculados](grupos.md)). El que recibe el golpe final muere en el momento, por el camino normal de vanilla. Los demás de su grupo mueren **al final de ese tick**, cuando `SharedVitals` ve que la vida compartida llegó a 0 y les hace `setHealth(0)` + `die()` (detalle en [vida y hambre](vida-y-hambre.md#muerte-del-grupo)). Cada uno ve su pantalla de muerte y reaparece por su cuenta.
 
 ## Dónde caen los ítems y la experiencia
 
@@ -52,3 +52,4 @@ Después vanilla llama a `ServerPlayer.restoreFrom(viejo, keepEverything)`:
 - [Tests: jugadores de prueba](../tests/jugadores-de-prueba.md): por qué el test usa `setHealth(0)` + `die()` y no `kill()`.
 - [Tests: inventario compartido](../tests/inventario-compartido.md)
 - [Estadísticas](estadisticas.md): cada muerte del grupo termina un intento y se anota con su causa.
+- [Grupos vinculados](grupos.md): lo compartido es de cada grupo, no del servidor.

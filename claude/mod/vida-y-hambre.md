@@ -6,7 +6,7 @@
 
 ## Hambre: un solo `FoodData`
 
-`PlayerMixin` engancha el final del constructor de `Player` y, para cada `ServerPlayer`, reemplaza `Player.foodData` (campo `protected`, no `final`) por `SharedInventoryState.foodData()`. Nivel de comida, saturación, agotamiento y el timer de regeneración son uno solo.
+`PlayerMixin` engancha el final del constructor de `Player` y, para cada `ServerPlayer`, reemplaza `Player.foodData` (campo `protected`, no `final`) por el `FoodData` de su grupo (`LinkGroup.foodData()`). Nivel de comida, saturación, agotamiento y el timer de regeneración son uno solo.
 
 **`FoodData.tick()` corre una sola vez por tick del servidor.** Cada jugador lo llama desde `ServerPlayer.doTick()`, así que con el objeto compartido correría una vez por jugador: la regeneración natural (que es un timer dentro de `FoodData`) y el daño por inanición irían al doble de velocidad. `FoodDataMixin` lo corta con un campo `@Unique lastTick` comparado contra `server.getTickCount()`.
 
@@ -36,7 +36,7 @@ La vida vive en los `SynchedEntityData` de cada entidad: no hay un objeto para c
 
 ## Muerte del grupo
 
-Si la vida compartida llega a 0 y había jugadores sincronizados, `killGroup`:
+**Cada grupo vinculado tiene su vida y muere por separado.** `syncHealth` separa a los conectados con `onlineByGroup` y corre `syncGroup` para cada grupo (ver [grupos vinculados](grupos.md)). Si la vida de un grupo llega a 0 y había jugadores sincronizados, `killGroup` (sólo con los de ese grupo):
 
 - pone la vida compartida en `UNKNOWN_HEALTH` y reinicia el hambre (20 de comida, 5 de saturación), como un jugador recién creado;
 - reinicia la experiencia compartida (ver [experiencia](experiencia.md));
@@ -59,3 +59,4 @@ La absorción (corazones amarillos) **no** se comparte: es otro campo (`absorpti
 - [Experiencia](experiencia.md): el mismo reparto por deltas, en puntos.
 - [Tests: jugadores de prueba](../tests/jugadores-de-prueba.md): por qué el test no usa `makeMockServerPlayerInLevel`.
 - [Estadísticas](estadisticas.md): los deltas negativos de `syncHealth` son los corazones perdidos de cada uno, y la víctima de `killGroup` se lleva la culpa.
+- [Grupos vinculados](grupos.md): lo compartido es de cada grupo, no del servidor.

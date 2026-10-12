@@ -6,7 +6,18 @@
 
 ## `SharedInventoryState`
 
-Extiende `SavedData` y se obtiene con `server.getDataStorage().computeIfAbsent(TYPE)`. Es el almacenamiento global del servidor que existe desde 26.x, no el de un `ServerLevel`.
+Extiende `SavedData` y se obtiene con `server.getDataStorage().computeIfAbsent(TYPE)`. Es el almacenamiento global del servidor que existe desde 26.x, no el de un `ServerLevel`. Guarda los grupos vinculados (ver [grupos vinculados](grupos.md)):
+
+| Clave | Qué es |
+|---|---|
+| Raíz (`items`, `equipment`, `food`, `health`, `experience`, `experienceScore`) | **El grupo general**, con `LinkGroup.MAP_CODEC` mezclado en la raíz. Son los mismos campos que hasta la 2.1.0, cuando había un solo grupo: un mundo viejo se lee sin migrar y una versión anterior puede leer uno nuevo (sólo ve el general) |
+| `groups` | Los demás grupos, por id, con `LinkGroup.CODEC` |
+| `members` | UUID → grupo y último nombre. Sólo los que tienen grupo asignado: el resto está en el general |
+| `initialized` | Del mundo, no de cada grupo |
+
+`OldSaveGameTest` decodifica un archivo con el formato de la 2.1.0 y verifica que todo queda en el general.
+
+Cada `LinkGroup` tiene estos campos:
 
 | Campo | Codec | Notas |
 |---|---|---|
@@ -16,7 +27,6 @@ Extiende `SavedData` y se obtiene con `server.getDataStorage().computeIfAbsent(T
 | `health` | `Codec.FLOAT` | `-1` (`UNKNOWN_HEALTH`) = nadie la fijó o murió el grupo. Ver [vida y hambre](vida-y-hambre.md). |
 | `experience` | `Codec.DOUBLE` | En **puntos**, no niveles. `-1` (`UNKNOWN_EXPERIENCE`) = mod recién instalado; el primero que entra aporta la suya. Ver [experiencia](experiencia.md). |
 | `experienceScore` | `Codec.INT` | El `totalExperience` compartido (puntaje de la pantalla de muerte). |
-| `initialized` | `Codec.BOOL` | Ver la migración en [carga de datos del jugador](carga-de-datos-del-jugador.md#migración-el-flag-initialized). |
 
 Las estadísticas van en otro archivo, `data/soullink/stats.dat`, con su propio `SavedData` (`GroupStats`): ver [estadísticas](estadisticas.md#persistencia).
 
@@ -28,7 +38,7 @@ Las estadísticas van en otro archivo, `data/soullink/stats.dat`, con su propio 
 
 **No uses objetos mutables como default en un codec.** La primera versión usaba `optionalFieldOf("equipment", new EntityEquipment())`. Ese default se crea **una sola vez** al armar el codec, así que dos mundos sin el campo (en singleplayer, en la misma sesión) habrían compartido el mismo `EntityEquipment`. Hoy es `optionalFieldOf("equipment")` + `orElseGet(EntityEquipment::new)`, y lo mismo para `food`.
 
-**`syncedHealth` y `syncedExperience` no se guardan.** Son `IdentityHashMap` por `ServerPlayer` con lo que le quedó a cada jugador en el último reparto. Al reiniciar el servidor arrancan vacíos y los que entran adoptan `health` y `experience`. Tampoco se guardan `experienceContributions` ni quién tiró la experiencia en la última muerte: duran un login o un tick.
+**`syncedHealth` y `syncedExperience` no se guardan.** Son `IdentityHashMap` por `ServerPlayer`, uno por grupo, con lo que le quedó a cada jugador en el último reparto. Al reiniciar el servidor arrancan vacíos y los que entran adoptan `health` y `experience`. Tampoco se guardan `experienceContributions` ni quién tiró la experiencia en la última muerte: duran un login o un tick.
 
 ## Estado activo estático
 
@@ -43,3 +53,4 @@ Las estadísticas van en otro archivo, `data/soullink/stats.dat`, con su propio 
 - [Inventario compartido](inventario-compartido.md)
 - [Experiencia](experiencia.md)
 - [Minecraft 26.x sin ofuscar](../general/minecraft-26-sin-ofuscar.md): cómo se verificó lo de `readTagFromDisk` con `javap`.
+- [Grupos vinculados](grupos.md): lo compartido es de cada grupo, no del servidor.

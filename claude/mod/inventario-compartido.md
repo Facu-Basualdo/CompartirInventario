@@ -6,12 +6,12 @@ Si un jugador agarra un diamante y el otro no lo ve, o lo ve y después desapare
 
 ## Cómo funciona
 
-`InventoryMixin` engancha el final del constructor de `Inventory` (`@Inject(method = "<init>", at = @At("TAIL"))`). Si el dueño es un `ServerPlayer`, reemplaza:
+`InventoryMixin` engancha el final del constructor de `Inventory` (`@Inject(method = "<init>", at = @At("TAIL"))`). Si el dueño es un `ServerPlayer`, reemplaza sus listas por las de **su grupo** (`SharedInventoryState.groupFor(player)`, ver [grupos vinculados](grupos.md)):
 
 | Qué | Campo en vanilla | Contenido | Se reemplaza por |
 |---|---|---|---|
-| Inventario + barra rápida | `Inventory.items` (`NonNullList<ItemStack>`, 36 slots, `final`) | slots 0–35 | `SharedInventoryState.items()` |
-| Armadura + mano secundaria | `EntityEquipment.items` (`EnumMap<EquipmentSlot, ItemStack>`, `final`) | slots 36–40 de `Inventory` mapean acá | `SharedInventoryState.equipmentItems()` |
+| Inventario + barra rápida | `Inventory.items` (`NonNullList<ItemStack>`, 36 slots, `final`) | slots 0–35 | `LinkGroup.items()` |
+| Armadura + mano secundaria | `EntityEquipment.items` (`EnumMap<EquipmentSlot, ItemStack>`, `final`) | slots 36–40 de `Inventory` mapean acá | `LinkGroup.equipmentItems()` |
 
 Los dos campos son `final`, por eso `items` lleva `@Mutable` en el `@Shadow` y el setter de `EntityEquipmentAccessor` lleva `@Mutable`.
 
@@ -81,9 +81,9 @@ Síntoma sin esto: dos jugadores pican bloques distintos con la misma hacha y, c
 
 Durante el constructor de `Inventory`, el campo `ServerPlayer.server` todavía es `null` (los campos de la subclase se asignan después de `super()`). Por eso se usa `player.level().getServer()`: `level` ya lo asignó el constructor de `Entity`.
 
-## Todos los jugadores comparten
+## Un inventario por grupo
 
-No hay emparejamiento: **es un único inventario para todo el servidor.** Un tercer jugador también entra al mismo inventario. Si se agrega emparejamiento (por ejemplo un comando `/compartir <jugador>`), `SharedInventoryState` tiene que pasar a ser un mapa de grupos y `shouldBlockLoadInto` tiene que buscar en todos.
+**Es un inventario por grupo vinculado, no por servidor.** Sin grupos armados, todos están en el general y comparten uno solo; con `/soullink grupo` cada grupo tiene el suyo. Cambiar de grupo con el jugador conectado reasigna `items`, el mapa de equipment y el `FoodData` en el lugar (`LinkGroups.move`, con `InventoryAccessor` y `PlayerAccessor`): detalle en [grupos vinculados](grupos.md).
 
 ## Ver también
 
@@ -92,3 +92,4 @@ No hay emparejamiento: **es un único inventario para todo el servidor.** Un ter
 - [Muerte y respawn](muerte-y-respawn.md): qué pasa cuando se crea un `ServerPlayer` nuevo.
 - [Persistencia](persistencia.md): dónde vive la lista compartida.
 - [Tests: inventario compartido](../tests/inventario-compartido.md): qué parte de esto está probada.
+- [Grupos vinculados](grupos.md): lo compartido es de cada grupo, no del servidor.

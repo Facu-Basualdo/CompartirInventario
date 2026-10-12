@@ -3,7 +3,7 @@
 	"id": "soullink",
 	"version": "${version}",
 	"name": "Soul Link",
-	"description": "Todos los jugadores del servidor comparten un único inventario (inventario, barra rápida, armadura y mano secundaria), el hambre, la vida y la experiencia en tiempo real. Cuenta los intentos y de quién fue la culpa de cada muerte (/soullink).",
+	"description": "Los jugadores vinculados comparten un único inventario (inventario, barra rápida, armadura y mano secundaria), el hambre, la vida y la experiencia en tiempo real. Podés vincular a todos o armar grupos (2 y 2, o como quieras). Cuenta los intentos y de quién fue la culpa de cada muerte (/soullink).",
 	"authors": [],
 	"license": "MIT",
 	"icon": "assets/soullink/icon.png",
@@ -16,6 +16,9 @@
 	"mixins": [
 		"soullink.mixins.json"
 	],
+	"breaks": {
+		"herosforge": "<0.14.0"
+	},
 	"depends": {
 		"fabricloader": ">=0.19.5",
 		"minecraft": "~26.3",

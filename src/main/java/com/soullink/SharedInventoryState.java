@@ -1,74 +1,57 @@
 package com.soullink;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 
-import com.soullink.mixin.EntityEquipmentAccessor;
-import com.soullink.mixin.FoodDataAccessor;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import org.jspecify.annotations.Nullable;
 
-import net.minecraft.core.NonNullList;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.ItemStackWithSlot;
-import net.minecraft.world.entity.EntityEquipment;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
 /**
- * Lo que comparten todos los jugadores del servidor: inventario, armadura, hambre, vida y experiencia.
+ * Los grupos vinculados del mundo y quién está en cada uno. Lo que comparte cada grupo está en {@link LinkGroup}.
  *
- * <p>Inventario, armadura y hambre se comparten por referencia: cada jugador apunta a estos mismos
- * objetos (ver {@link com.soullink.mixin.InventoryMixin} y
- * {@link com.soullink.mixin.PlayerMixin}). La vida no se puede compartir así porque vive
- * en los datos sincronizados de cada entidad; la reparte {@link SharedVitals} al final de cada tick. La
- * experiencia tampoco (son campos primitivos): la reparte {@link SharedExperience}.
+ * <p>Un jugador sin grupo asignado está en {@link #GENERAL}: si nadie arma grupos, todos los del servidor
+ * comparten todo, como antes de que existieran los grupos.
  *
- * <p>Se guarda en {@code data/soullink/shared_inventory.dat} dentro del mundo.
+ * <p>Se guarda en {@code data/soullink/shared_inventory.dat} dentro del mundo. El grupo general va en la raíz
+ * del archivo con los mismos campos que hasta la 2.1.0, y los demás en {@code groups}: un mundo viejo se lee sin
+ * migrar nada.
  */
 public class SharedInventoryState extends SavedData {
-	/** Vida desconocida: nadie la fijó todavía, o el grupo acaba de morir. */
-	public static final float UNKNOWN_HEALTH = -1;
+	/** El grupo de los que no tienen uno asignado. */
+	public static final String GENERAL = "general";
 
-	/** Experiencia desconocida: el mod recién instalado, todavía no entró nadie. */
-	public static final double UNKNOWN_EXPERIENCE = -1;
+	/** A quién se le asignó un grupo, con su último nombre para listarlo aunque no esté conectado. */
+	record Member(String group, String name) {
+		static final Codec<Member> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+				Codec.STRING.fieldOf("group").forGetter(Member::group),
+				Codec.STRING.fieldOf("name").forGetter(Member::name)
+		).apply(instance, Member::new));
+	}
 
-	private static final Codec<FoodData> FOOD_CODEC = RecordCodecBuilder.create(instance -> instance.group(
-			Codec.INT.optionalFieldOf("level", 20).forGetter(FoodData::getFoodLevel),
-			Codec.FLOAT.optionalFieldOf("saturation", 5.0F).forGetter(FoodData::getSaturationLevel),
-			Codec.FLOAT.optionalFieldOf("exhaustion", 0.0F).forGetter(food -> ((FoodDataAccessor) food).soullink$getExhaustionLevel())
-	).apply(instance, (level, saturation, exhaustion) -> {
-		FoodData food = new FoodData();
-		setFood(food, level, saturation, exhaustion);
-		return food;
-	}));
-
-	private static final Codec<SharedInventoryState> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-			ItemStackWithSlot.CODEC.listOf().optionalFieldOf("items", List.of()).forGetter(SharedInventoryState::itemsWithSlots),
-			EntityEquipment.CODEC.optionalFieldOf("equipment").forGetter(state -> Optional.of(state.equipment)),
-			FOOD_CODEC.optionalFieldOf("food").forGetter(state -> Optional.of(state.foodData)),
-			Codec.FLOAT.optionalFieldOf("health", UNKNOWN_HEALTH).forGetter(state -> state.health),
+	/** Público sólo para el test que lee un archivo de la 2.1.0. */
+	public static final Codec<SharedInventoryState> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+			LinkGroup.MAP_CODEC.forGetter(state -> state.groups.get(GENERAL)),
 			Codec.BOOL.optionalFieldOf("initialized", false).forGetter(state -> state.initialized),
-			Codec.DOUBLE.optionalFieldOf("experience", UNKNOWN_EXPERIENCE).forGetter(state -> state.experiencePoints),
-			Codec.INT.optionalFieldOf("experienceScore", 0).forGetter(state -> state.experienceScore)
-	).apply(instance, (items, equipment, food, health, initialized, experience, experienceScore) -> new SharedInventoryState(
-			items, equipment.orElseGet(EntityEquipment::new), food.orElseGet(FoodData::new), health, initialized,
-			experience, experienceScore)));
+			Codec.unboundedMap(Codec.STRING, LinkGroup.CODEC).optionalFieldOf("groups", Map.of()).forGetter(SharedInventoryState::otherGroups),
+			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Member.CODEC).optionalFieldOf("members", Map.of()).forGetter(state -> state.members)
+	).apply(instance, SharedInventoryState::new));
 
 	// DataFixTypes null: Fabric API se encarga de que no se intente aplicar data fixers a datos de mods.
 	private static final SavedDataType<SharedInventoryState> TYPE = new SavedDataType<>(
@@ -77,48 +60,32 @@ public class SharedInventoryState extends SavedData {
 	// Estado del servidor que está corriendo ahora. Lo usan los mixins que no tienen acceso al servidor.
 	private static @Nullable SharedInventoryState active;
 
-	private final NonNullList<ItemStack> items = NonNullList.withSize(Inventory.INVENTORY_SIZE, ItemStack.EMPTY);
-	private final EntityEquipment equipment;
-	private final FoodData foodData;
-	private float health;
+	// En orden de creación: el general primero.
+	private final Map<String, LinkGroup> groups = new LinkedHashMap<>();
+	private final Map<UUID, Member> members = new HashMap<>();
 	private boolean initialized;
-	private double experiencePoints;
-	private int experienceScore;
 
-	// Vida de cada jugador justo después del último reparto. No se guarda: es por objeto ServerPlayer,
-	// y un jugador recién creado (login, respawn) no está acá hasta que adopta la vida compartida.
-	private final Map<ServerPlayer, Float> syncedHealth = new IdentityHashMap<>();
-	private final Map<ServerPlayer, SharedExperience.Experience> syncedExperience = new IdentityHashMap<>();
-
-	// Jugadores que entraron con un archivo de antes del mod: su experiencia se suma a la compartida en vez
+	// Jugadores que entraron con un archivo de antes del mod: su experiencia se suma a la de su grupo en vez
 	// de perderse. Como los ítems rescatados, vive en memoria entre la carga del archivo y el primer tick.
 	private final Set<UUID> experienceContributions = new HashSet<>();
-
-	// Quién tiró la experiencia del grupo en este tick (ver SharedExperience.shouldDropExperience).
-	private int deathDropTick = -1;
-	private @Nullable ServerPlayer deathDropper;
 
 	// Ítems de antes de instalar el mod, rescatados al cargar el archivo del jugador y pendientes de
 	// ponerse en un cofre cuando termine de entrar (ver PersonalItemsChest).
 	private final Map<UUID, List<ItemStack>> rescuedItems = new HashMap<>();
 
 	private SharedInventoryState() {
-		this(List.of(), new EntityEquipment(), new FoodData(), UNKNOWN_HEALTH, false, UNKNOWN_EXPERIENCE, 0);
+		this(LinkGroup.create(true), false, Map.of(), Map.of());
 	}
 
-	private SharedInventoryState(List<ItemStackWithSlot> items, EntityEquipment equipment, FoodData foodData, float health, boolean initialized,
-			double experiencePoints, int experienceScore) {
-		for (ItemStackWithSlot item : items) {
-			if (item.isValidInContainer(this.items.size())) {
-				this.items.set(item.slot(), item.stack());
+	private SharedInventoryState(LinkGroup general, boolean initialized, Map<String, LinkGroup> others, Map<UUID, Member> members) {
+		this.groups.put(GENERAL, general);
+		others.forEach((id, group) -> {
+			if (!id.equals(GENERAL)) {
+				this.groups.put(id, group);
 			}
-		}
-		this.equipment = equipment;
-		this.foodData = foodData;
-		this.health = health;
+		});
 		this.initialized = initialized;
-		this.experiencePoints = experiencePoints;
-		this.experienceScore = experienceScore;
+		this.members.putAll(members);
 	}
 
 	public static SharedInventoryState get(MinecraftServer server) {
@@ -136,6 +103,12 @@ public class SharedInventoryState extends SavedData {
 		return server == null ? null : get(server);
 	}
 
+	/** El grupo de este jugador, o null si no corresponde compartir (lado cliente). */
+	public static @Nullable LinkGroup groupFor(Player player) {
+		SharedInventoryState state = forPlayer(player);
+		return state == null ? null : state.groupOf(player);
+	}
+
 	public static @Nullable SharedInventoryState active() {
 		return active;
 	}
@@ -146,61 +119,69 @@ public class SharedInventoryState extends SavedData {
 
 	/**
 	 * Vanilla, al cargar los datos guardados de un jugador, vacía su inventario (y pisa su hambre) con
-	 * lo que tenía guardado. Con todo compartido eso pisaría lo del otro jugador, así que se bloquea
+	 * lo que tenía guardado. Con todo compartido eso pisaría lo del resto del grupo, así que se bloquea
 	 * una vez que el estado compartido ya está en uso.
 	 */
 	public static boolean shouldBlockLoadInto(Object storage) {
 		SharedInventoryState state = active;
-		return state != null && state.initialized
-				&& (storage == state.items || storage == state.equipmentItems() || storage == state.foodData);
+		return state != null && state.initialized && state.isShared(storage);
 	}
 
-	public NonNullList<ItemStack> items() {
-		return this.items;
+	/** Si {@code storage} es la lista, la armadura o el hambre de algún grupo. */
+	public boolean isShared(Object storage) {
+		for (LinkGroup group : this.groups.values()) {
+			if (group.owns(storage)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-	public EnumMap<EquipmentSlot, ItemStack> equipmentItems() {
-		return ((EntityEquipmentAccessor) this.equipment).soullink$getItems();
+	public LinkGroup groupOf(Player player) {
+		return group(groupIdOf(player.getGameProfile().id()));
 	}
 
-	public FoodData foodData() {
-		return this.foodData;
+	public String groupIdOf(UUID player) {
+		Member member = this.members.get(player);
+		return member == null ? GENERAL : member.group();
 	}
 
-	/** El hambre vuelve a como la tiene un jugador recién creado. */
-	public void resetFood() {
-		setFood(this.foodData, 20, 5.0F, 0.0F);
+	/** El grupo con ese id. Si no existe se crea vacío, con la experiencia en 0. */
+	public LinkGroup group(String id) {
+		return this.groups.computeIfAbsent(id, unused -> LinkGroup.create(false));
 	}
 
-	public float health() {
-		return this.health;
+	public Map<String, LinkGroup> groups() {
+		return Collections.unmodifiableMap(this.groups);
 	}
 
-	public void setHealth(float health) {
-		this.health = health;
+	/** Sólo anota a qué grupo pertenece: reengancharlo a las listas nuevas es cosa de {@link LinkGroups#move}. */
+	void setGroupOf(UUID player, String name, String group) {
+		if (group.equals(GENERAL)) {
+			this.members.remove(player);
+		} else {
+			group(group);
+			this.members.put(player, new Member(group, name));
+		}
 	}
 
-	Map<ServerPlayer, Float> syncedHealth() {
-		return this.syncedHealth;
+	/** Los nombres de los que tienen un grupo asignado, por grupo y en orden alfabético. */
+	public Map<String, List<String>> assignedNames() {
+		Map<String, List<String>> result = new TreeMap<>();
+		for (Member member : this.members.values()) {
+			result.computeIfAbsent(member.group(), unused -> new ArrayList<>()).add(member.name());
+		}
+		result.values().forEach(names -> names.sort(String.CASE_INSENSITIVE_ORDER));
+		return result;
 	}
 
-	/** Puntos de experiencia (no niveles), o UNKNOWN_EXPERIENCE. */
-	public double experiencePoints() {
-		return this.experiencePoints;
-	}
-
-	/** El puntaje que muestra la pantalla de muerte: la experiencia juntada desde la última muerte. */
-	public int experienceScore() {
-		return this.experienceScore;
-	}
-
-	public void setExperience(double points, int score) {
-		this.experiencePoints = points;
-		this.experienceScore = score;
-	}
-
-	Map<ServerPlayer, SharedExperience.Experience> syncedExperience() {
-		return this.syncedExperience;
+	/** Los conectados, separados por grupo. Sólo aparecen los grupos con alguien conectado. */
+	public Map<String, List<ServerPlayer>> onlineByGroup(List<ServerPlayer> players) {
+		Map<String, List<ServerPlayer>> result = new LinkedHashMap<>();
+		for (ServerPlayer player : players) {
+			result.computeIfAbsent(groupIdOf(player.getGameProfile().id()), unused -> new ArrayList<>()).add(player);
+		}
+		return result;
 	}
 
 	public void addExperienceContribution(UUID player) {
@@ -209,16 +190,6 @@ public class SharedInventoryState extends SavedData {
 
 	boolean takeExperienceContribution(UUID player) {
 		return this.experienceContributions.remove(player);
-	}
-
-	/** true si este jugador es el primero en morir en este tick, o ya lo era. */
-	boolean claimDeathDrop(ServerPlayer player, int tick) {
-		if (this.deathDropTick == tick && this.deathDropper != player) {
-			return false;
-		}
-		this.deathDropTick = tick;
-		this.deathDropper = player;
-		return true;
 	}
 
 	public boolean isInitialized() {
@@ -245,20 +216,9 @@ public class SharedInventoryState extends SavedData {
 		return true;
 	}
 
-	private static void setFood(FoodData food, int level, float saturation, float exhaustion) {
-		food.setFoodLevel(level);
-		food.setSaturation(saturation);
-		((FoodDataAccessor) food).soullink$setExhaustionLevel(exhaustion);
-	}
-
-	private List<ItemStackWithSlot> itemsWithSlots() {
-		List<ItemStackWithSlot> result = new ArrayList<>();
-		for (int slot = 0; slot < this.items.size(); slot++) {
-			ItemStack stack = this.items.get(slot);
-			if (!stack.isEmpty()) {
-				result.add(new ItemStackWithSlot(slot, stack));
-			}
-		}
-		return result;
+	private Map<String, LinkGroup> otherGroups() {
+		Map<String, LinkGroup> others = new LinkedHashMap<>(this.groups);
+		others.remove(GENERAL);
+		return others;
 	}
 }

@@ -11,7 +11,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.gamerules.GameRules;
 
 /**
- * Reparte una única barra de experiencia entre todos los jugadores que participan.
+ * Reparte una única barra de experiencia entre los jugadores de cada grupo vinculado.
  *
  * <p>La experiencia son tres campos primitivos de cada jugador (nivel, progreso y puntaje), así que no
  * se puede compartir por referencia: igual que la vida, al final de cada tick se suma cuánto cambió la
@@ -29,13 +29,17 @@ public final class SharedExperience {
 		}
 
 		SharedInventoryState state = SharedInventoryState.get(server);
-		Map<ServerPlayer, Experience> synced = state.syncedExperience();
 		// Apagada en la config: cada uno con la suya. Al volver a prenderla, todos adoptan la compartida guardada.
 		if (!SoulLink.config().shareExperience()) {
-			synced.clear();
+			state.groups().values().forEach(group -> group.syncedExperience().clear());
 			return;
 		}
 		GroupStats stats = GroupStats.get(server);
+		state.onlineByGroup(players).forEach((id, members) -> syncGroup(state, stats, state.group(id), members));
+	}
+
+	private static void syncGroup(SharedInventoryState world, GroupStats stats, LinkGroup state, List<ServerPlayer> players) {
+		Map<ServerPlayer, Experience> synced = state.syncedExperience();
 		double points = state.experiencePoints();
 		int score = state.experienceScore();
 		boolean anySynced = false;
@@ -74,7 +78,7 @@ public final class SharedExperience {
 		}
 		for (int i = 0; i < newcomers.size(); i++) {
 			ServerPlayer newcomer = newcomers.get(i);
-			boolean preMod = state.takeExperienceContribution(newcomer.getGameProfile().id());
+			boolean preMod = world.takeExperienceContribution(newcomer.getGameProfile().id());
 			if (preMod || (unknown && !anySynced && i == 0)) {
 				points += pointsOf(newcomer);
 				score += newcomer.totalExperience;
@@ -98,7 +102,7 @@ public final class SharedExperience {
 	}
 
 	/** Muere el grupo: como en vanilla, se pierde la experiencia salvo con keepInventory. */
-	static void onGroupDeath(SharedInventoryState state, ServerPlayer victim) {
+	static void onGroupDeath(LinkGroup state, ServerPlayer victim) {
 		state.syncedExperience().clear();
 		if (!victim.level().getGameRules().get(GameRules.KEEP_INVENTORY)) {
 			state.setExperience(0, 0);
@@ -113,8 +117,8 @@ public final class SharedExperience {
 		if (!SharedVitals.participates(player) || !SoulLink.config().shareExperience()) {
 			return true;
 		}
-		SharedInventoryState state = SharedInventoryState.get(player.level().getServer());
-		return state.claimDeathDrop(player, player.level().getServer().getTickCount());
+		LinkGroup group = SharedInventoryState.get(player.level().getServer()).groupOf(player);
+		return group.claimDeathDrop(player, player.level().getServer().getTickCount());
 	}
 
 	private static void apply(ServerPlayer player, int level, float progress, int score) {

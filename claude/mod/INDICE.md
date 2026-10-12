@@ -11,7 +11,7 @@ Java 25 · Fabric API 0.162.0+26.3 · Mixins sobre Minecraft 26.3 (nombres de Mo
 3. Verificá la firma real del método con `javap` (ver [minecraft-26-sin-ofuscar](../general/minecraft-26-sin-ofuscar.md)) en vez de confiar en tutoriales o en memoria.
 4. Corré `gradlew runGameTest`.
 
-No lances agentes de exploración sobre el código del mod: son 23 clases y todo lo que no dicen está en estas notas.
+No lances agentes de exploración sobre el código del mod: son 28 clases y todo lo que no dicen está en estas notas.
 
 ## Fundamentos
 
@@ -34,6 +34,12 @@ No lances agentes de exploración sobre el código del mod: son 23 clases y todo
 |---|---|
 | [Muerte y respawn](muerte-y-respawn.md) | Si muere uno, **mueren todos** al final del tick, y `dropAll()` tira los ítems una sola vez · ítems y experiencia caen donde está **el que recibió el golpe**: `killGroup` mata primero a la víctima (con dos golpes simultáneos, la que más vida perdió), no en el orden de `PlayerList` · el hambre se reinicia y la vida queda en `UNKNOWN_HEALTH` hasta que reaparece alguien · el respawn crea un `ServerPlayer` nuevo que se reengancha en el constructor · `replaceWith()` sobre la misma lista es un no-op, no lo "arregles" |
 
+## Grupos
+
+| Nota | De qué trata |
+|---|---|
+| [Grupos vinculados](grupos.md) | Lo compartido es de un `LinkGroup`, no del servidor · sin grupo = `general` (como antes) · el constructor ya conoce el UUID (`gameProfile` se asigna antes del `Inventory`) · `LinkGroups.move` reasigna `items`, equipment y `foodData` en el lugar y hace `forget` en los dos grupos · **no uses `PlayerList.respawn`**: `restoreFrom` copiaría el inventario viejo en el nuevo · el que cambia de grupo no se lleva nada · grupo nuevo con experiencia en 0, no `UNKNOWN` · `claimDeathDrop` y `shouldBlockLoadInto` son por grupo · el general va en la raíz del `.dat` · `SoulLinkApi` es la única API externa: Hero's Forge la llama por reflexión |
+
 ## Estadísticas y configuración
 
 | Nota | De qué trata |
@@ -45,5 +51,5 @@ No lances agentes de exploración sobre el código del mod: son 23 clases y todo
 
 | Nota | De qué trata |
 |---|---|
-| [Intercambiar lugar](intercambiar-lugar.md) | `/intercambiar [jugador]`, sin permisos: cambian posición, dimensión y mirada · sin argumento elige solo si hay un único compañero · no intercambia con un jugador muerto (sigue en `PlayerList`) · se leen las dos ubicaciones antes de mover a nadie · `teleportTo` de `/tp` ya cambia de dimensión, baja del vehículo y despierta · `resetFallDistance()` para que el que venía cayendo no se lastime al aparecer en el piso (la vida es compartida) |
+| [Intercambiar lugar](intercambiar-lugar.md) | `/intercambiar [jugador]`, sin permisos: cambian posición, dimensión y mirada · sin argumento elige solo si hay un único compañero **en su grupo** · no intercambia con un jugador muerto (sigue en `PlayerList`) · se leen las dos ubicaciones antes de mover a nadie · `teleportTo` de `/tp` ya cambia de dimensión, baja del vehículo y despierta · `resetFallDistance()` para que el que venía cayendo no se lastime al aparecer en el piso (la vida es compartida) |
 | [Migración del id](migracion-de-id.md) | Desde la 2.0.0 el id es `soullink` (antes `inventariocompartido`) · `IdMigration` mueve `data/inventariocompartido/shared_inventory.dat` a `data/soullink/` en `SERVER_STARTING`, antes de cargar los mundos; si ya hay uno nuevo no lo toca, y si falla no arranca · **la marca `InventarioCompartido` del archivo de cada jugador no se renombra**: con otra clave, todos recibirían otra vez sus ítems viejos |

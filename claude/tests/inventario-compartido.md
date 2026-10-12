@@ -6,7 +6,7 @@
 
 ## Un solo método, a propósito
 
-**No partas el test en varios.** Lo compartido es global del servidor, y los tests de un mismo batch corren en el mismo tick: dos tests que agregan diamantes o se sacan vida a la vez se pisan y fallan sin razón aparente. Si hace falta aislar casos, el test tiene que limpiar el estado (`clearContent()`) y los batches tienen que ir separados.
+**No partas el test en varios.** Lo compartido es del grupo general, y todos los jugadores de prueba arrancan ahí, y los tests de un mismo batch corren en el mismo tick: dos tests que agregan diamantes o se sacan vida a la vez se pisan y fallan sin razón aparente. Si hace falta aislar casos, el test tiene que limpiar el estado (`clearContent()`) y los batches tienen que ir separados.
 
 El log dice **"2 GAME TESTS COMPLETE"** y **"All 2 required tests passed"** aunque el nuestro sea uno solo. No hay otro test nuestro duplicado.
 
@@ -66,9 +66,31 @@ En la muerte grupal, A es el que más vida pierde (5 contra 4) y B queda lejos p
 - **Los casos en que `/intercambiar` se niega** (nadie más, varios sin nombre, un jugador muerto) ni la caída reiniciada.
 - **El guardado y la recarga del `.dat` entre reinicios.** El archivo se escribe (en `build/run/gameTest/world/data/soullink/`), pero ningún test reinicia el servidor y lo lee.
 
+## Grupos vinculados, al final
+
+Después de la muerte grupal entran cuatro jugadores (`grupo-0` … `grupo-3`), sin grupo:
+
+| Paso | Qué verifica |
+|---|---|
+| `grupo-0` junta 30 puntos | Sin grupos, los cuatro quedan en nivel 3 |
+| `/soullink grupo rojo-… grupo-0 grupo-1` y `azul-… grupo-2 grupo-3`, desde la consola (hace falta ser operador) | Los grupos se arman; los diamantes de rojo los ve su compañero y no azul, y al revés con las esmeraldas; cada grupo tiene su `FoodData` |
+| Tick siguiente | Los grupos nuevos arrancan con nivel 0 y los 30 puntos quedan en el general: no se duplican |
+| `grupo-0` baja a 10 | Su compañero en 10; azul no cambia |
+| Muere `grupo-2` | Muere su compañero y rojo sigue vivo; azul pasa al intento 2, rojo sigue en el 1 y el general no cambia |
+| `PlayerList.respawn(grupo-0)` | El jugador recreado sigue en rojo, con los diamantes |
+| `/soullink grupo quitar grupo-1` | Vuelve al general sin los diamantes, que siguen en rojo, y usa el hambre del general |
+
+**Los nombres de los grupos llevan un sufijo al azar.** Los grupos quedan en el mundo de prueba; con el mismo nombre, la corrida siguiente arrancaría con los diamantes de la anterior.
+
+**Al final se deja el general como después de una muerte grupal** (experiencia en 0, vida en `UNKNOWN_HEALTH`, hambre reiniciada). Si no, la corrida siguiente arranca con los 30 puntos de `grupo-0` y falla en "A recibe los 3 niveles de antes del mod de C (nivel 6, esperado 3)".
+
 ## La configuración, aparte
 
 `ConfigGameTest` va en otra clase por la misma razón que la migración: ver [tests de configuración](configuracion.md).
+
+## El archivo de antes de los grupos, aparte
+
+`OldSaveGameTest` decodifica con `SharedInventoryState.CODEC` y `GroupStats.CODEC` (públicos sólo para esto) un `CompoundTag` con el formato de la 2.1.0: ítems, vida, experiencia e intentos quedan en el grupo general, no aparece otro grupo, y al codificar el general sigue en la raíz. No toca el estado del servidor, así que va en su propia clase.
 
 ## La migración del id, aparte
 
@@ -82,3 +104,4 @@ En la muerte grupal, A es el que más vida pierde (5 contra 4) y B queda lejos p
 - [Experiencia (mod)](../mod/experiencia.md)
 - [Estadísticas (mod)](../mod/estadisticas.md)
 - [Tests: configuración](configuracion.md)
+- [Grupos vinculados (mod)](../mod/grupos.md)

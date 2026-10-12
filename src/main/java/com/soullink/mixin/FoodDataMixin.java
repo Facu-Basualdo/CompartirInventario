@@ -19,12 +19,12 @@ public abstract class FoodDataMixin {
 
 	/**
 	 * Cada jugador llama a tick() desde su doTick(). Con el FoodData compartido eso lo correría una vez
-	 * por jugador y por tick: la regeneración natural y el daño por inanición irían al doble de velocidad.
+	 * por jugador del grupo y por tick: la regeneración natural y el daño por inanición irían al doble de velocidad.
 	 */
 	@Inject(method = "tick", at = @At("HEAD"), cancellable = true)
 	private void soullink$tickOncePerServerTick(ServerPlayer player, CallbackInfo ci) {
 		SharedInventoryState state = SharedInventoryState.active();
-		if (state == null || state.foodData() != (Object) this) {
+		if (state == null || !state.isShared(this)) {
 			return;
 		}
 		// Un jugador en creativo no gasta hambre; si se quedara con el tick, la regeneración lo curaría a él

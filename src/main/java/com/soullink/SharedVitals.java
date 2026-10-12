@@ -14,7 +14,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 
 /**
- * Reparte una única barra de vida entre todos los jugadores que participan.
+ * Reparte una única barra de vida entre los jugadores de cada grupo vinculado. Cada grupo es independiente:
+ * el daño de uno no le llega a otro, y si muere un grupo los demás siguen.
  *
  * <p>Al final de cada tick suma cuánto cambió la vida de cada jugador desde el último reparto
  * (daño, curación, regeneración) y deja a todos con el resultado. Sumar en vez de copiar hace que
@@ -36,6 +37,11 @@ public final class SharedVitals {
 		}
 
 		SharedInventoryState state = SharedInventoryState.get(server);
+		GroupStats stats = GroupStats.get(server);
+		state.onlineByGroup(players).forEach((id, members) -> syncGroup(stats, id, state.group(id), members));
+	}
+
+	private static void syncGroup(GroupStats stats, String groupId, LinkGroup state, List<ServerPlayer> players) {
 		Map<ServerPlayer, Float> synced = state.syncedHealth();
 		float health = state.health();
 		float healthBefore = health;
@@ -79,11 +85,10 @@ public final class SharedVitals {
 			}
 		}
 
-		GroupStats stats = GroupStats.get(server);
 		damage.forEach(stats::addDamage);
 
 		if (anySynced && health <= 0 && victim != null) {
-			killGroup(state, players, victim);
+			killGroup(stats, groupId, state, players, victim);
 			return;
 		}
 
@@ -119,15 +124,15 @@ public final class SharedVitals {
 	 * El primero en morir tira el inventario compartido y la experiencia, así que la víctima muere antes
 	 * que el resto: todo queda donde recibió el golpe y no al lado de quien esté primero en la lista.
 	 */
-	private static void killGroup(SharedInventoryState state, List<ServerPlayer> players, ServerPlayer victim) {
-		state.setHealth(SharedInventoryState.UNKNOWN_HEALTH);
+	private static void killGroup(GroupStats stats, String groupId, LinkGroup state, List<ServerPlayer> players, ServerPlayer victim) {
+		state.setHealth(LinkGroup.UNKNOWN_HEALTH);
 		state.resetFood();
 		state.syncedHealth().clear();
 		SharedExperience.onGroupDeath(state, victim);
 
 		@Nullable DamageSource lastSource = victim.getLastDamageSource();
 		DamageSource deathSource = lastSource != null ? lastSource : victim.damageSources().generic();
-		recordGroupDeath(victim, deathSource);
+		recordGroupDeath(stats, groupId, victim, deathSource);
 		List<ServerPlayer> order = new ArrayList<>(players);
 		order.remove(victim);
 		order.addFirst(victim);
@@ -139,15 +144,15 @@ public final class SharedVitals {
 		}
 	}
 
-	private static void recordGroupDeath(ServerPlayer victim, DamageSource source) {
-		MinecraftServer server = victim.level().getServer();
-		GroupStats stats = GroupStats.get(server);
-		GroupStats.Death death = stats.recordGroupDeath(victim, source.getLocalizedDeathMessage(victim));
+	/** El aviso va a todo el servidor: con varios grupos, también es para ver cómo le va al resto. */
+	private static void recordGroupDeath(GroupStats stats, String groupId, ServerPlayer victim, DamageSource source) {
+		GroupStats.Death death = stats.recordGroupDeath(groupId, victim, source.getLocalizedDeathMessage(victim));
 		if (SoulLink.config().announceDeaths()) {
-			server.getPlayerList().broadcastSystemMessage(Component.literal("☠ Terminó el intento #" + death.attempt() + " después de "
-					+ GroupStats.formatTime(death.ticks()) + ". Culpa de ").withStyle(ChatFormatting.RED)
+			String group = groupId.equals(SharedInventoryState.GENERAL) ? "" : "Grupo " + groupId + ": ";
+			victim.level().getServer().getPlayerList().broadcastSystemMessage(Component.literal("☠ " + group + "terminó el intento #" + death.attempt()
+					+ " después de " + GroupStats.formatTime(death.ticks()) + ". Culpa de ").withStyle(ChatFormatting.RED)
 					.append(victim.getDisplayName())
-					.append(Component.literal(" (récord: " + GroupStats.formatTime(stats.bestTicks()) + ")").withStyle(ChatFormatting.GRAY)), false);
+					.append(Component.literal(" (récord: " + GroupStats.formatTime(stats.run(groupId).bestTicks()) + ")").withStyle(ChatFormatting.GRAY)), false);
 		}
 	}
 }

@@ -20,10 +20,12 @@
 
 ## El intento
 
+**Los intentos son de cada grupo vinculado** (`GroupStats.Run`, por id de grupo): si muere azul, rojo sigue en su intento. Las estadísticas de cada jugador son del jugador y van con él si cambia de grupo. `/soullink` muestra el grupo del que lo usa, y `/soullink stats <grupo>` otro. El aviso de muerte va a todo el servidor y nombra al grupo si no es el general.
+
 | Campo | Qué es |
 |---|---|
 | `attempt` | El intento en curso, desde 1. Las muertes del grupo son `attempt - 1` |
-| `attemptTicks` | Ticks jugados en este intento. `GroupStats.tick` lo suma **sólo si hay algún participante vivo conectado** |
+| `attemptTicks` | Ticks jugados en este intento. `GroupStats.tick` lo suma **sólo si hay algún participante del grupo vivo y conectado** |
 | `bestTicks` | El intento más largo ya terminado. `bestTicks()` devuelve el máximo entre éste y el actual |
 | `deaths` | Las últimas 10 muertes: intento, duración, nombre de la víctima y causa |
 
@@ -35,7 +37,7 @@
 
 ## Persistencia
 
-Se guarda en `data/soullink/stats.dat`, **aparte de `shared_inventory.dat`**: reiniciar las estadísticas o un archivo de estadísticas corrupto no pueden tocar el inventario. Es otro `SavedData` con su propio `SavedDataType` (`SoulLink.id("stats")`) y `DataFixTypes` en null (ver [persistencia](persistencia.md)).
+Se guarda en `data/soullink/stats.dat`, **aparte de `shared_inventory.dat`**. Los intentos del general van en la raíz (como hasta la 2.1.0) y los de los demás grupos en `groups`. Además,: reiniciar las estadísticas o un archivo de estadísticas corrupto no pueden tocar el inventario. Es otro `SavedData` con su propio `SavedDataType` (`SoulLink.id("stats")`) y `DataFixTypes` en null (ver [persistencia](persistencia.md)).
 
 **Los jugadores van por UUID, con el último nombre conocido.** Funciona igual con 2 que con 10, y el que se desconecta conserva su fila. El nombre se actualiza cada vez que suma algo.
 
@@ -53,7 +55,7 @@ Los corazones van redondeados a entero en el scoreboard (sólo enteros) y con me
 
 ## Comando
 
-`SoulLinkCommand`: `/soullink` y `/soullink stats` para cualquiera; `/soullink stats reiniciar` y `/soullink recargar` con `LEVEL_GAMEMASTERS`. Reiniciar borra y recrea los objetivos, que es la forma de vaciar todos los puntajes de una vez, y después vuelve a aplicar la barra lateral.
+`SoulLinkCommand`: `/soullink`, `/soullink stats [grupo]` y `/soullink grupos` para cualquiera; `/soullink grupo …` (ver [grupos vinculados](grupos.md)), `/soullink stats reiniciar` y `/soullink recargar` con `LEVEL_GAMEMASTERS`. Reiniciar borra y recrea los objetivos, que es la forma de vaciar todos los puntajes de una vez, y después vuelve a aplicar la barra lateral.
 
 ## Ver también
 
@@ -63,3 +65,4 @@ Los corazones van redondeados a entero en el scoreboard (sólo enteros) y con me
 - [Muerte y respawn](muerte-y-respawn.md): cómo se elige la víctima.
 - [Persistencia](persistencia.md)
 - [Tests: inventario compartido](../tests/inventario-compartido.md)
+- [Grupos vinculados](grupos.md): lo compartido es de cada grupo, no del servidor.

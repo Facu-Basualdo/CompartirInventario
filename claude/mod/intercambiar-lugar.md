@@ -8,9 +8,9 @@
 
 | Uso | Con quién intercambia |
 |---|---|
-| `/intercambiar` con un solo jugador más conectado | Con ése |
-| `/intercambiar` con cero o con varios más | Falla con un mensaje: con varios hay que nombrarlo |
-| `/intercambiar <jugador>` | Con el nombrado. Los selectores (`@p`, `@r`) siguen la regla de vanilla, que los reserva a operadores; el nombre no pide nada |
+| `/intercambiar` con un solo jugador más conectado **en su grupo** | Con ése, aunque haya jugadores de otros grupos |
+| `/intercambiar` con cero o con varios más en su grupo | Falla con un mensaje: con varios hay que nombrarlo |
+| `/intercambiar <jugador>` | Con el nombrado, sea o no de su grupo. Los selectores (`@p`, `@r`) siguen la regla de vanilla, que los reserva a operadores; el nombre no pide nada |
 
 **No intercambia si alguno de los dos está muerto.** Un jugador en la pantalla de muerte sigue en `PlayerList` y `isDeadOrDying()` da `true`; teletransportarlo no lo revive y el otro terminaría en el lugar donde murió. Creativo y espectador sí pueden intercambiar.
 
@@ -30,3 +30,4 @@ Después, igual que `TeleportCommand.performTeleport`, si no está planeando con
 
 - [Muerte y respawn](muerte-y-respawn.md): por qué cambiar de dimensión no rompe lo compartido y reaparecer sí crea otro `ServerPlayer`.
 - [Tests: inventario compartido](../tests/inventario-compartido.md): el paso que intercambia entre el Overworld y el Nether.
+- [Grupos vinculados](grupos.md): sin nombre, elige sólo dentro del grupo.

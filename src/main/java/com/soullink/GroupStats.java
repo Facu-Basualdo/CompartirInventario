@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import org.jspecify.annotations.Nullable;
 
@@ -22,8 +23,9 @@ import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
 /**
- * Estadísticas del grupo: cuántas veces murió, cuánto duró cada intento y qué hizo cada jugador. Se llevan
- * por UUID, así que sirven igual con dos jugadores que con diez, y el que se desconecta conserva las suyas.
+ * Estadísticas: cuántas veces murió cada grupo vinculado, cuánto duró cada intento y qué hizo cada jugador.
+ * Los jugadores se llevan por UUID, así que sirven igual con dos que con diez, y el que se desconecta o
+ * cambia de grupo conserva las suyas.
  *
  * <p>Se guarda en {@code data/soullink/stats.dat} dentro del mundo, aparte del estado compartido: borrar las
  * estadísticas no puede tocar el inventario.
@@ -118,73 +120,114 @@ public class GroupStats extends SavedData {
 		).apply(instance, Death::new));
 	}
 
-	private static final Codec<GroupStats> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-			Codec.INT.optionalFieldOf("attempt", 1).forGetter(stats -> stats.attempt),
-			Codec.LONG.optionalFieldOf("attemptTicks", 0L).forGetter(stats -> stats.attemptTicks),
-			Codec.LONG.optionalFieldOf("bestTicks", 0L).forGetter(stats -> stats.bestTicks),
-			Codec.unboundedMap(UUIDUtil.STRING_CODEC, PlayerStats.CODEC).optionalFieldOf("players", Map.of()).forGetter(stats -> stats.players),
-			Death.CODEC.listOf().optionalFieldOf("deaths", List.of()).forGetter(stats -> stats.deaths)
+	/** Los intentos de un grupo vinculado: cada grupo muere y vuelve a empezar por su cuenta. */
+	public static final class Run {
+		/** Los mismos campos que tenía la raíz del archivo hasta la 2.1.0, con un solo grupo. */
+		private static final MapCodec<Run> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+				Codec.INT.optionalFieldOf("attempt", 1).forGetter(run -> run.attempt),
+				Codec.LONG.optionalFieldOf("attemptTicks", 0L).forGetter(run -> run.attemptTicks),
+				Codec.LONG.optionalFieldOf("bestTicks", 0L).forGetter(run -> run.bestTicks),
+				Death.CODEC.listOf().optionalFieldOf("deaths", List.of()).forGetter(run -> run.deaths)
+		).apply(instance, Run::new));
+
+		private int attempt;
+		/** Ticks jugados en este intento: sólo corre con alguien del grupo vivo y conectado. */
+		private long attemptTicks;
+		private long bestTicks;
+		private final List<Death> deaths = new ArrayList<>();
+
+		private Run(int attempt, long attemptTicks, long bestTicks, List<Death> deaths) {
+			this.attempt = attempt;
+			this.attemptTicks = attemptTicks;
+			this.bestTicks = bestTicks;
+			// El codec devuelve una lista inmutable: se copia para poder sumarle.
+			this.deaths.addAll(deaths);
+		}
+
+		private static Run fresh() {
+			return new Run(1, 0, 0, List.of());
+		}
+
+		public int attempt() {
+			return this.attempt;
+		}
+
+		public long attemptTicks() {
+			return this.attemptTicks;
+		}
+
+		/** El intento más largo, contando el que está en curso. */
+		public long bestTicks() {
+			return Math.max(this.bestTicks, this.attemptTicks);
+		}
+
+		/** Las muertes del grupo, de la más vieja a la más nueva (sólo las últimas). */
+		public List<Death> deaths() {
+			return List.copyOf(this.deaths);
+		}
+	}
+
+	/** Público sólo para el test que lee un archivo de la 2.1.0. */
+	public static final Codec<GroupStats> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+			Run.MAP_CODEC.forGetter(stats -> stats.run(SharedInventoryState.GENERAL)),
+			Codec.unboundedMap(Codec.STRING, Run.MAP_CODEC.codec()).optionalFieldOf("groups", Map.of()).forGetter(GroupStats::otherRuns),
+			Codec.unboundedMap(UUIDUtil.STRING_CODEC, PlayerStats.CODEC).optionalFieldOf("players", Map.of()).forGetter(stats -> stats.players)
 	).apply(instance, GroupStats::new));
 
 	private static final SavedDataType<GroupStats> TYPE = new SavedDataType<>(SoulLink.id("stats"), GroupStats::new, CODEC, null);
 
-	private int attempt;
-	/** Ticks jugados en este intento: sólo corre con alguien vivo conectado. */
-	private long attemptTicks;
-	private long bestTicks;
+	private final Map<String, Run> runs = new HashMap<>();
+	// Por jugador y no por grupo: si alguien cambia de grupo, sus culpas van con él.
 	private final Map<UUID, PlayerStats> players = new HashMap<>();
-	private final List<Death> deaths = new ArrayList<>();
 
 	private GroupStats() {
-		this(1, 0, 0, Map.of(), List.of());
+		this(Run.fresh(), Map.of(), Map.of());
 	}
 
-	// El codec devuelve colecciones inmutables: se copian para poder sumarles.
-	private GroupStats(int attempt, long attemptTicks, long bestTicks, Map<UUID, PlayerStats> players, List<Death> deaths) {
-		this.attempt = attempt;
-		this.attemptTicks = attemptTicks;
-		this.bestTicks = bestTicks;
+	private GroupStats(Run general, Map<String, Run> others, Map<UUID, PlayerStats> players) {
+		this.runs.putAll(others);
+		this.runs.put(SharedInventoryState.GENERAL, general);
 		this.players.putAll(players);
-		this.deaths.addAll(deaths);
 	}
 
 	public static GroupStats get(MinecraftServer server) {
 		return server.getDataStorage().computeIfAbsent(TYPE);
 	}
 
-	/** END_SERVER_TICK: el reloj del intento corre mientras haya alguien jugando, no con el servidor vacío. */
+	/** END_SERVER_TICK: el reloj de cada grupo corre mientras alguno de sus jugadores esté jugando. */
 	public static void tick(MinecraftServer server) {
-		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-			if (SharedVitals.participates(player) && player.isAlive()) {
-				GroupStats stats = get(server);
-				stats.attemptTicks++;
+		SharedInventoryState state = SharedInventoryState.get(server);
+		GroupStats stats = get(server);
+		state.onlineByGroup(server.getPlayerList().getPlayers()).forEach((id, members) -> {
+			if (members.stream().anyMatch(player -> SharedVitals.participates(player) && player.isAlive())) {
+				stats.runToChange(id).attemptTicks++;
 				stats.setDirty();
-				return;
 			}
-		}
+		});
 	}
 
-	public int attempt() {
-		return this.attempt;
+	/** Los intentos de ese grupo; uno que nunca jugó está en el primero. Leer no lo agrega al archivo. */
+	public Run run(String group) {
+		Run run = this.runs.get(group);
+		return run != null ? run : Run.fresh();
 	}
 
-	public long attemptTicks() {
-		return this.attemptTicks;
-	}
-
-	/** El intento más largo, contando el que está en curso. */
-	public long bestTicks() {
-		return Math.max(this.bestTicks, this.attemptTicks);
-	}
-
-	/** Las muertes del grupo, de la más vieja a la más nueva (sólo las últimas). */
-	public List<Death> deaths() {
-		return List.copyOf(this.deaths);
+	private Run runToChange(String group) {
+		return this.runs.computeIfAbsent(group, unused -> Run.fresh());
 	}
 
 	/** Los jugadores, de más culpas a menos y, entre iguales, del que más corazones perdió al que menos. */
 	public List<PlayerStats> ranking() {
 		return this.players.values().stream()
+				.sorted(Comparator.comparingInt((PlayerStats player) -> player.faults).thenComparingDouble(player -> player.damage).reversed())
+				.toList();
+	}
+
+	/** Como {@link #ranking()}, sólo con los que hoy están en ese grupo. */
+	public List<PlayerStats> ranking(SharedInventoryState state, String group) {
+		return this.players.entrySet().stream()
+				.filter(entry -> state.groupIdOf(entry.getKey()).equals(group))
+				.map(Map.Entry::getValue)
 				.sorted(Comparator.comparingInt((PlayerStats player) -> player.faults).thenComparingDouble(player -> player.damage).reversed())
 				.toList();
 	}
@@ -213,28 +256,27 @@ public class GroupStats extends SavedData {
 		change(player, stats -> stats.mobs++);
 	}
 
-	/** Murió el grupo: la culpa es de quien recibió el golpe, y arranca otro intento. */
-	Death recordGroupDeath(ServerPlayer victim, Component cause) {
+	/** Murió el grupo: la culpa es de quien recibió el golpe, y ese grupo arranca otro intento. */
+	Death recordGroupDeath(String group, ServerPlayer victim, Component cause) {
 		change(victim, stats -> stats.faults++);
-		Death death = new Death(this.attempt, this.attemptTicks, victim.getGameProfile().name(), cause);
-		this.deaths.add(death);
-		if (this.deaths.size() > HISTORY_SIZE) {
-			this.deaths.removeFirst();
+		Run run = runToChange(group);
+		Death death = new Death(run.attempt, run.attemptTicks, victim.getGameProfile().name(), cause);
+		run.deaths.add(death);
+		if (run.deaths.size() > HISTORY_SIZE) {
+			run.deaths.removeFirst();
 		}
-		this.bestTicks = bestTicks();
-		this.attempt++;
-		this.attemptTicks = 0;
+		run.bestTicks = run.bestTicks();
+		run.attempt++;
+		run.attemptTicks = 0;
 		this.setDirty();
 		return death;
 	}
 
 	/** Todo vuelve a cero, como en un mundo nuevo. */
 	public void reset() {
-		this.attempt = 1;
-		this.attemptTicks = 0;
-		this.bestTicks = 0;
+		this.runs.clear();
+		this.runs.put(SharedInventoryState.GENERAL, Run.fresh());
 		this.players.clear();
-		this.deaths.clear();
 		this.setDirty();
 	}
 
@@ -254,5 +296,11 @@ public class GroupStats extends SavedData {
 		long minutes = seconds / 60 % 60;
 		long rest = seconds % 60;
 		return hours > 0 ? "%d:%02d:%02d".formatted(hours, minutes, rest) : "%d:%02d".formatted(minutes, rest);
+	}
+
+	private Map<String, Run> otherRuns() {
+		Map<String, Run> others = new HashMap<>(this.runs);
+		others.remove(SharedInventoryState.GENERAL);
+		return others;
 	}
 }

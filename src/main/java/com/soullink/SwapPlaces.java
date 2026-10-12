@@ -16,13 +16,14 @@ import net.minecraft.server.level.ServerPlayer;
 
 /**
  * /intercambiar [jugador]: el que lo usa y el otro jugador intercambian posición, dimensión y hacia dónde
- * miran. Sin argumento elige solo cuando hay un único compañero; con más, hay que nombrarlo.
+ * miran. Sin argumento elige solo cuando hay un único compañero en su grupo; con más, hay que nombrarlo.
+ * Nombrándolo, sirve con cualquiera, aunque sea de otro grupo.
  */
 public final class SwapPlaces {
 	private static final SimpleCommandExceptionType NOBODY = new SimpleCommandExceptionType(
-			Component.literal("No hay nadie con quien intercambiar lugar"));
+			Component.literal("No hay nadie de tu grupo conectado: usá /intercambiar <jugador>"));
 	private static final SimpleCommandExceptionType AMBIGUOUS = new SimpleCommandExceptionType(
-			Component.literal("Hay varios jugadores: usá /intercambiar <jugador>"));
+			Component.literal("Hay varios en tu grupo: usá /intercambiar <jugador>"));
 	private static final SimpleCommandExceptionType SELF = new SimpleCommandExceptionType(
 			Component.literal("No podés intercambiar lugar con vos mismo"));
 	private static final SimpleCommandExceptionType DEAD = new SimpleCommandExceptionType(
@@ -40,8 +41,10 @@ public final class SwapPlaces {
 
 	private static ServerPlayer onlyPartner(CommandSourceStack source) throws CommandSyntaxException {
 		ServerPlayer self = source.getPlayerOrException();
+		SharedInventoryState state = SharedInventoryState.get(source.getServer());
+		String group = state.groupIdOf(self.getGameProfile().id());
 		List<ServerPlayer> others = source.getServer().getPlayerList().getPlayers().stream()
-				.filter(player -> player != self)
+				.filter(player -> player != self && state.groupIdOf(player.getGameProfile().id()).equals(group))
 				.toList();
 		if (others.isEmpty()) {
 			throw NOBODY.create();

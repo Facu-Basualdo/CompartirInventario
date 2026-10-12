@@ -4,6 +4,8 @@
 
 Síntomas que esto evita: **un jugador encanta y al otro no le baja el nivel**, **el grupo muere y cada uno tira su propia copia de los orbes** (la experiencia se multiplica por la cantidad de jugadores), o **un jugador con partida de antes del mod entra y pierde sus niveles**.
 
+**Es una barra por grupo vinculado** (`LinkGroup.experiencePoints`), repartida grupo por grupo como la vida. Un grupo creado con `/soullink grupo` arranca en 0: ver [grupos vinculados](grupos.md#qué-se-lleva-el-que-cambia-de-grupo).
+
 ## Se reparte al final del tick, como la vida
 
 La experiencia son tres campos primitivos públicos de `Player`: `experienceLevel`, `experienceProgress` (float de 0 a 1) y `totalExperience` (el puntaje de la pantalla de muerte). No hay un objeto para compartir por referencia como el `FoodData`. **`SharedExperience.sync` corre en `END_SERVER_TICK`, registrado después de `SharedVitals.syncHealth`**, y hace lo mismo que la vida (ver [vida y hambre](vida-y-hambre.md)):
@@ -56,3 +58,4 @@ El primero que muere es el que recibió el golpe (ver [muerte y respawn](muerte-
 - [Tests: inventario compartido](../tests/inventario-compartido.md)
 - [Estadísticas](estadisticas.md): los deltas positivos son la experiencia juntada de cada uno.
 - [Configuración](configuracion.md): `compartirExperiencia: false` corta el reparto.
+- [Grupos vinculados](grupos.md): lo compartido es de cada grupo, no del servidor.

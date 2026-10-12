@@ -10,6 +10,7 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import org.jspecify.annotations.Nullable;
 
 import com.soullink.GroupStats;
+import com.soullink.LinkGroup;
 import com.soullink.SharedInventoryState;
 import com.soullink.StatsScoreboard;
 
@@ -25,6 +26,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
@@ -58,7 +60,7 @@ import net.minecraft.world.phys.Vec3;
 public class SharedInventoryGameTest {
 	// Un solo test: lo compartido es global del servidor, así que tests en paralelo se pisarían.
 	// La vida se reparte al final de cada tick, por eso los pasos van en una secuencia con thenIdle(1).
-	@GameTest(maxTicks = 100)
+	@GameTest(maxTicks = 150)
 	public void playersShareInventoryHungerAndHealth(GameTestHelper helper) {
 		PlayerList playerList = helper.getLevel().getServer().getPlayerList();
 		ServerPlayer a = joinSurvivalPlayer(helper, "jugador-a");
@@ -67,8 +69,14 @@ public class SharedInventoryGameTest {
 		ServerPlayer[] veteran = new ServerPlayer[1];
 		// Las estadísticas quedan en el mundo de prueba entre corridas: se comparan contra lo que había al empezar
 		GroupStats stats = GroupStats.get(helper.getLevel().getServer());
-		int attemptBefore = stats.attempt();
+		int attemptBefore = stats.run(SharedInventoryState.GENERAL).attempt();
 		float[] healthBefore = new float[1];
+		// Grupos: cuatro jugadores, dos y dos. Con nombres nuevos en cada corrida, porque los grupos quedan en el mundo de prueba
+		ServerPlayer[] four = new ServerPlayer[4];
+		String suffix = Integer.toString((int) (System.nanoTime() & 0xFFFFF), 36);
+		String red = "rojo-" + suffix;
+		String blue = "azul-" + suffix;
+		SharedInventoryState world = SharedInventoryState.get(helper.getLevel().getServer());
 
 		helper.startSequence()
 				.thenExecute(() -> {
@@ -280,15 +288,15 @@ public class SharedInventoryGameTest {
 					helper.assertTrue(countDropped(b, Items.EMERALD) == 0, Component.literal("Al lado de B no cae nada"));
 					helper.assertTrue(droppedExperience(respawned[0]) == 21, Component.literal("A tira la experiencia del grupo una vez (tiró " + droppedExperience(respawned[0]) + ")"));
 					helper.assertTrue(droppedExperience(b) == 0, Component.literal("B no tira otra copia de la experiencia"));
-					helper.assertTrue(SharedInventoryState.get(helper.getLevel().getServer()).experiencePoints() == 0, Component.literal("La experiencia compartida se pierde al morir"));
+					helper.assertTrue(SharedInventoryState.get(helper.getLevel().getServer()).group(SharedInventoryState.GENERAL).experiencePoints() == 0, Component.literal("La experiencia compartida se pierde al morir"));
 					assertFood(helper, b, 20, "El hambre compartida se reinicia al morir");
 
 					// La muerte queda en las estadísticas: culpa de A, que recibió más daño, y arranca otro intento
-					helper.assertTrue(stats.attempt() == attemptBefore + 1, Component.literal("Arranca el intento siguiente (" + stats.attempt() + ", antes " + attemptBefore + ")"));
-					helper.assertTrue(stats.attemptTicks() == 0, Component.literal("El reloj del intento nuevo arranca en 0 y no corre con todos muertos"));
+					helper.assertTrue(stats.run(SharedInventoryState.GENERAL).attempt() == attemptBefore + 1, Component.literal("Arranca el intento siguiente (" + stats.run(SharedInventoryState.GENERAL).attempt() + ", antes " + attemptBefore + ")"));
+					helper.assertTrue(stats.run(SharedInventoryState.GENERAL).attemptTicks() == 0, Component.literal("El reloj del intento nuevo arranca en 0 y no corre con todos muertos"));
 					helper.assertTrue(GroupStats.Stat.FAULTS.of(stat(stats, a)) == 1, Component.literal("La culpa es de A"));
 					helper.assertTrue(GroupStats.Stat.FAULTS.of(stat(stats, b)) == 0, Component.literal("B no tiene la culpa"));
-					GroupStats.Death death = stats.deaths().getLast();
+					GroupStats.Death death = stats.run(SharedInventoryState.GENERAL).deaths().getLast();
 					helper.assertTrue(death.victim().equals("jugador-a") && death.attempt() == attemptBefore, Component.literal("La última muerte es de A en el intento " + attemptBefore + " (" + death + ")"));
 					var culpas = helper.getLevel().getServer().getScoreboard().getObjective(StatsScoreboard.objectiveName(GroupStats.Stat.FAULTS));
 					helper.assertTrue(culpas != null && helper.getLevel().getServer().getScoreboard().getOrCreatePlayerScore(ScoreHolder.forNameOnly("jugador-a"), culpas).get() == 1,
@@ -296,6 +304,80 @@ public class SharedInventoryGameTest {
 					helper.getLevel().getEntitiesOfClass(Entity.class, b.getBoundingBox().inflate(20), e -> e instanceof ItemEntity || e instanceof ExperienceOrb).forEach(Entity::discard);
 					playerList.remove(respawned[0]);
 					playerList.remove(b);
+
+					for (int i = 0; i < four.length; i++) {
+						four[i] = joinSurvivalPlayer(helper, "grupo-" + i);
+					}
+				})
+				.thenIdle(1)
+				.thenExecute(() -> {
+					// Sin grupos asignados, los cuatro están en el general: lo que junta uno es de todos (30 puntos: nivel 3)
+					four[0].giveExperiencePoints(30);
+				})
+				.thenIdle(1)
+				.thenExecute(() -> {
+					assertLevel(helper, four[3], 3, "Sin grupos, los cuatro comparten la experiencia");
+					runServerCommand(helper, "soullink grupo " + red + " grupo-0 grupo-1");
+					runServerCommand(helper, "soullink grupo " + blue + " grupo-2 grupo-3");
+					helper.assertTrue(world.groupIdOf(four[1].getGameProfile().id()).equals(red) && world.groupIdOf(four[3].getGameProfile().id()).equals(blue),
+							Component.literal("/soullink grupo arma los dos grupos"));
+
+					four[0].getInventory().add(new ItemStack(Items.DIAMOND, 2));
+					four[2].getInventory().add(new ItemStack(Items.EMERALD, 3));
+					assertCount(helper, four[1], Items.DIAMOND, 2, "El compañero de rojo ve los diamantes");
+					assertCount(helper, four[2], Items.DIAMOND, 0, "Azul no ve los diamantes de rojo");
+					assertCount(helper, four[3], Items.EMERALD, 3, "El compañero de azul ve las esmeraldas");
+					assertCount(helper, four[0], Items.EMERALD, 0, "Rojo no ve las esmeraldas de azul");
+					helper.assertTrue(four[0].getFoodData() == four[1].getFoodData() && four[0].getFoodData() != four[2].getFoodData(),
+							Component.literal("Cada grupo tiene su hambre"));
+				})
+				.thenIdle(1)
+				.thenExecute(() -> {
+					assertLevel(helper, four[0], 0, "Un grupo nuevo arranca sin experiencia: la del general no se duplica");
+					helper.assertTrue(Math.abs(world.group(SharedInventoryState.GENERAL).experiencePoints() - 30) < 0.01,
+							Component.literal("La experiencia queda en el general (" + world.group(SharedInventoryState.GENERAL).experiencePoints() + ")"));
+					healthBefore[0] = four[2].getHealth();
+					four[0].setHealth(10);
+				})
+				.thenIdle(1)
+				.thenExecute(() -> {
+					assertHealth(helper, four[1], 10, "Rojo comparte la vida");
+					assertHealth(helper, four[2], healthBefore[0], "El daño de rojo no le llega a azul");
+
+					// Si muere azul, rojo sigue
+					four[2].setHealth(0);
+					four[2].die(four[2].damageSources().genericKill());
+				})
+				.thenIdle(1)
+				.thenExecute(() -> {
+					helper.assertTrue(four[3].isDeadOrDying(), Component.literal("Muere el compañero de azul"));
+					helper.assertFalse(four[0].isDeadOrDying() || four[1].isDeadOrDying(), Component.literal("Rojo sigue vivo"));
+					helper.assertTrue(stats.run(blue).attempt() == 2 && stats.run(red).attempt() == 1,
+							Component.literal("Azul pasa al intento 2 y rojo sigue en el 1 (" + stats.run(blue).attempt() + ", " + stats.run(red).attempt() + ")"));
+					helper.assertTrue(stats.run(SharedInventoryState.GENERAL).attempt() == attemptBefore + 1, Component.literal("La muerte de azul no cuenta en el general"));
+
+					// El jugador recreado sigue en su grupo
+					ServerPlayer recreated = playerList.respawn(four[0], true, Entity.RemovalReason.CHANGED_DIMENSION);
+					recreated.connection.player = recreated;
+					four[0] = recreated;
+					assertCount(helper, recreated, Items.DIAMOND, 2, "El jugador recreado sigue con el inventario de rojo");
+
+					// Al salir del grupo no se lleva nada: los diamantes se quedan en rojo
+					runServerCommand(helper, "soullink grupo quitar grupo-1");
+					helper.assertTrue(world.groupIdOf(four[1].getGameProfile().id()).equals(SharedInventoryState.GENERAL), Component.literal("grupo-1 vuelve al general"));
+					assertCount(helper, four[1], Items.DIAMOND, 0, "El que sale de rojo no se lleva los diamantes");
+					assertCount(helper, four[0], Items.DIAMOND, 2, "Los diamantes siguen en rojo");
+					helper.assertTrue(four[1].getFoodData() == world.group(SharedInventoryState.GENERAL).foodData(), Component.literal("El que sale usa el hambre del general"));
+
+					for (ServerPlayer player : four) {
+						playerList.remove(player);
+					}
+					// El general queda como después de la muerte grupal de arriba: si no, la corrida siguiente arranca
+					// con los 30 puntos de grupo-0 y falla en otro paso
+					LinkGroup general = world.group(SharedInventoryState.GENERAL);
+					general.setExperience(0, 0);
+					general.setHealth(LinkGroup.UNKNOWN_HEALTH);
+					general.resetFood();
 				})
 				.thenSucceed();
 	}
@@ -412,6 +494,12 @@ public class SharedInventoryGameTest {
 	private static int droppedExperience(ServerPlayer player) {
 		return player.level().getEntitiesOfClass(ExperienceOrb.class, player.getBoundingBox().inflate(4))
 				.stream().mapToInt(ExperienceOrb::getValue).sum();
+	}
+
+	/** Como operador (desde la consola): /soullink grupo no lo puede usar cualquiera. */
+	private static void runServerCommand(GameTestHelper helper, String command) {
+		MinecraftServer server = helper.getLevel().getServer();
+		server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), command);
 	}
 
 	private static void runCommand(ServerPlayer player, String command) {
