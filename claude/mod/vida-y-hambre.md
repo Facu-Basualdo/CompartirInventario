@@ -58,3 +58,4 @@ La absorción (corazones amarillos) **no** se comparte: es otro campo (`absorpti
 - [Muerte y respawn](muerte-y-respawn.md)
 - [Experiencia](experiencia.md): el mismo reparto por deltas, en puntos.
 - [Tests: jugadores de prueba](../tests/jugadores-de-prueba.md): por qué el test no usa `makeMockServerPlayerInLevel`.
+- [Estadísticas](estadisticas.md): los deltas negativos de `syncHealth` son los corazones perdidos de cada uno, y la víctima de `killGroup` se lleva la culpa.

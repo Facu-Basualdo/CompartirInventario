@@ -7,7 +7,8 @@
 	"entrypoints": {
 		"fabric-gametest": [
 			"com.soullink.test.SharedInventoryGameTest",
-			"com.soullink.test.IdMigrationGameTest"
+			"com.soullink.test.IdMigrationGameTest",
+			"com.soullink.test.ConfigGameTest"
 		]
 	},
 	"depends": {

@@ -1,11 +1,14 @@
 package com.soullink;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -35,6 +38,9 @@ public final class SharedVitals {
 		SharedInventoryState state = SharedInventoryState.get(server);
 		Map<ServerPlayer, Float> synced = state.syncedHealth();
 		float health = state.health();
+		float healthBefore = health;
+		// Vida que perdió cada uno en este tick, para las estadísticas (curarse no descuenta)
+		Map<ServerPlayer, Float> damage = new IdentityHashMap<>();
 		boolean anySynced = false;
 		// El que recibió el golpe que mata al grupo: el que ya murió o, si nadie llegó a 0 por su cuenta
 		// (dos golpes en el mismo tick), el que más vida perdió.
@@ -49,6 +55,9 @@ public final class SharedVitals {
 				anySynced = true;
 				float delta = player.getHealth() - last;
 				health += delta;
+				if (delta < 0) {
+					damage.put(player, -delta);
+				}
 				boolean dead = player.isDeadOrDying();
 				if (victim == null || (dead && !victim.isDeadOrDying()) || (dead == victim.isDeadOrDying() && delta < victimDelta)) {
 					victim = player;
@@ -70,9 +79,18 @@ public final class SharedVitals {
 			}
 		}
 
+		GroupStats stats = GroupStats.get(server);
+		damage.forEach(stats::addDamage);
+
 		if (anySynced && health <= 0 && victim != null) {
 			killGroup(state, players, victim);
 			return;
+		}
+
+		// Susto: el golpe que dejó al grupo con poca vida, sin llegar a matarlo
+		float scareHealth = (float) (SoulLink.config().scareHearts() * 2);
+		if (victim != null && victimDelta < 0 && healthBefore > scareHealth && health <= scareHealth) {
+			stats.addScare(victim);
 		}
 
 		float maxHealth = 0;
@@ -109,6 +127,7 @@ public final class SharedVitals {
 
 		@Nullable DamageSource lastSource = victim.getLastDamageSource();
 		DamageSource deathSource = lastSource != null ? lastSource : victim.damageSources().generic();
+		recordGroupDeath(victim, deathSource);
 		List<ServerPlayer> order = new ArrayList<>(players);
 		order.remove(victim);
 		order.addFirst(victim);
@@ -117,6 +136,18 @@ public final class SharedVitals {
 				player.setHealth(0);
 				player.die(deathSource);
 			}
+		}
+	}
+
+	private static void recordGroupDeath(ServerPlayer victim, DamageSource source) {
+		MinecraftServer server = victim.level().getServer();
+		GroupStats stats = GroupStats.get(server);
+		GroupStats.Death death = stats.recordGroupDeath(victim, source.getLocalizedDeathMessage(victim));
+		if (SoulLink.config().announceDeaths()) {
+			server.getPlayerList().broadcastSystemMessage(Component.literal("☠ Terminó el intento #" + death.attempt() + " después de "
+					+ GroupStats.formatTime(death.ticks()) + ". Culpa de ").withStyle(ChatFormatting.RED)
+					.append(victim.getDisplayName())
+					.append(Component.literal(" (récord: " + GroupStats.formatTime(stats.bestTicks()) + ")").withStyle(ChatFormatting.GRAY)), false);
 		}
 	}
 }

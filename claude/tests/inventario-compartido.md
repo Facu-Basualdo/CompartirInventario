@@ -38,12 +38,16 @@ En orden, sobre dos jugadores A y B en supervivencia:
 | Entra C con un archivo **sin marca** (3 manzanas doradas, botas de diamante y `XpLevel` 3) | No entran a lo compartido; aparece **un** cofre al lado de C con todo; los 3 niveles **sí** se suman a la experiencia compartida (A queda en nivel 3) | [carga-de-datos-del-jugador](../mod/carga-de-datos-del-jugador.md#cofre-con-los-ítems-de-antes-del-mod) |
 | Se guarda a C (ahora con la marca) y entra otro jugador con ese archivo | No aparece un segundo cofre | [carga-de-datos-del-jugador](../mod/carga-de-datos-del-jugador.md#cofre-con-los-ítems-de-antes-del-mod) |
 | `a.getFoodData() == b.getFoodData()` y se cambia la comida de A | El hambre es el mismo objeto | [vida-y-hambre](../mod/vida-y-hambre.md) |
-| A baja a 10 → B en 10; B se cura 4 → A en 14 | Reparto de vida en los dos sentidos | [vida-y-hambre](../mod/vida-y-hambre.md) |
+| A baja a 10 → B en 10; B se cura 4 → A en 14 | Reparto de vida en los dos sentidos; A suma a sus estadísticas la vida que perdió y B nada | [vida-y-hambre](../mod/vida-y-hambre.md) · [estadisticas](../mod/estadisticas.md) |
 | A pierde 2 y B pierde 3 en el mismo tick → los dos en 9 | Se suman deltas, no se copia el último | [vida-y-hambre](../mod/vida-y-hambre.md) |
 | `PlayerList.respawn(A, true, …)` | El `ServerPlayer` nuevo comparte inventario y hambre, adopta la vida y la experiencia, y no cura a B | [muerte-y-respawn](../mod/muerte-y-respawn.md) |
-| A junta 20 puntos y B 5 en el mismo tick → los dos en nivel 4; B gasta un nivel → A en 3 | Reparto de experiencia por puntos, y que gastar niveles también se comparte | [experiencia](../mod/experiencia.md) |
+| A junta 20 puntos y B 5 en el mismo tick → los dos en nivel 4; B gasta un nivel → A en 3 | Reparto de experiencia por puntos, y que gastar niveles también se comparte; cada uno suma lo que juntó (20 y 5) y gastar no resta | [experiencia](../mod/experiencia.md) · [estadisticas](../mod/estadisticas.md) |
+| En el mismo tick que gasta el nivel, B baja de 9 a 3 de vida; después vuelve a 9 | B suma un susto y A no | [estadisticas](../mod/estadisticas.md) |
+| B mata un zombi con `hurtServer(playerAttack(b), 1000)` | B suma un mob y A no. Después se borran el zombi y lo que soltó, que si no se contaría en los drops de la muerte grupal | [estadisticas](../mod/estadisticas.md) |
 | A en el área y B en el Nether mirando a 90°; A corre `/intercambiar` y después `/intercambiar jugador-b` | Cambian de lugar y de dimensión, A queda mirando a 90°, y con el nombre vuelven a donde estaban | [intercambiar-lugar](../mod/intercambiar-lugar.md) |
-| A (en el área) pierde 5 y B (11 bloques más lejos) pierde 4 en el mismo tick, con 9 de vida | Mueren los dos; las 7 esmeraldas y 21 puntos de orbes (nivel 3 × 7) caen **al lado de A** y nada al lado de B; la experiencia compartida queda en 0; el hambre vuelve a 20 | [muerte-y-respawn](../mod/muerte-y-respawn.md#dónde-caen-los-ítems-y-la-experiencia) |
+| A (en el área) pierde 5 y B (11 bloques más lejos) pierde 4 en el mismo tick, con 9 de vida | Mueren los dos; las 7 esmeraldas y 21 puntos de orbes (nivel 3 × 7) caen **al lado de A** y nada al lado de B; la experiencia compartida queda en 0; el hambre vuelve a 20. En las estadísticas: arranca el intento siguiente con el reloj en 0, la culpa es de A, la última muerte es de `jugador-a` y `soullink_culpas` de A da 1 | [muerte-y-respawn](../mod/muerte-y-respawn.md#dónde-caen-los-ítems-y-la-experiencia) · [estadisticas](../mod/estadisticas.md) |
+
+**Las estadísticas se comparan contra lo que había al empezar, o contra 0 por jugador.** `stats.dat` queda en el mundo de prueba entre corridas, así que el intento se compara con `attemptBefore`. Los jugadores son nuevos en cada corrida (`UUID.randomUUID()`), así que sus filas arrancan vacías; `stat()` devuelve `PlayerStats.EMPTY` si todavía no tienen.
 
 **Al jugador recreado no le des experiencia (ni vida) en el mismo paso del respawn.** Hasta el primer reparto no está sincronizado: en ese tick adopta lo compartido y lo que le hayas dado se pierde. Por eso los 20 puntos van un `thenIdle(1)` después.
 
@@ -62,6 +66,10 @@ En la muerte grupal, A es el que más vida pierde (5 contra 4) y B queda lejos p
 - **Los casos en que `/intercambiar` se niega** (nadie más, varios sin nombre, un jugador muerto) ni la caída reiniciada.
 - **El guardado y la recarga del `.dat` entre reinicios.** El archivo se escribe (en `build/run/gameTest/world/data/soullink/`), pero ningún test reinicia el servidor y lo lee.
 
+## La configuración, aparte
+
+`ConfigGameTest` va en otra clase por la misma razón que la migración: ver [tests de configuración](configuracion.md).
+
 ## La migración del id, aparte
 
 `IdMigrationGameTest` prueba `IdMigration.moveIfMissing` sobre una carpeta temporal (mueve, no pisa uno nuevo, sin archivo viejo no hace nada). Va en otra clase y no adentro del test grande porque no toca el estado global: el mundo del test es de todos los tests. Ver [migración del id](../mod/migracion-de-id.md).
@@ -72,3 +80,5 @@ En la muerte grupal, A es el que más vida pierde (5 contra 4) y B queda lejos p
 - [Inventario compartido (mod)](../mod/inventario-compartido.md)
 - [Vida y hambre (mod)](../mod/vida-y-hambre.md)
 - [Experiencia (mod)](../mod/experiencia.md)
+- [Estadísticas (mod)](../mod/estadisticas.md)
+- [Tests: configuración](configuracion.md)

@@ -30,6 +30,12 @@ public final class SharedExperience {
 
 		SharedInventoryState state = SharedInventoryState.get(server);
 		Map<ServerPlayer, Experience> synced = state.syncedExperience();
+		// Apagada en la config: cada uno con la suya. Al volver a prenderla, todos adoptan la compartida guardada.
+		if (!SoulLink.config().shareExperience()) {
+			synced.clear();
+			return;
+		}
+		GroupStats stats = GroupStats.get(server);
 		double points = state.experiencePoints();
 		int score = state.experienceScore();
 		boolean anySynced = false;
@@ -42,7 +48,12 @@ public final class SharedExperience {
 			Experience last = synced.get(player);
 			if (last != null) {
 				anySynced = true;
-				points += pointsOf(player) - last.points();
+				double gained = pointsOf(player) - last.points();
+				points += gained;
+				// Encantar o usar el yunque resta: sólo cuenta lo que juntó
+				if (gained > 0) {
+					stats.addExperience(player, gained);
+				}
 				score += player.totalExperience - last.score();
 			} else {
 				newcomers.add(player);
@@ -99,7 +110,7 @@ public final class SharedExperience {
 	 * tiraría la misma experiencia una vez por jugador. Sólo la tira el primero que muere en el tick.
 	 */
 	public static boolean shouldDropExperience(ServerPlayer player) {
-		if (!SharedVitals.participates(player)) {
+		if (!SharedVitals.participates(player) || !SoulLink.config().shareExperience()) {
 			return true;
 		}
 		SharedInventoryState state = SharedInventoryState.get(player.level().getServer());

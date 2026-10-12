@@ -54,3 +54,5 @@ El primero que muere es el que recibió el golpe (ver [muerte y respawn](muerte-
 - [Persistencia](persistencia.md): `experience` y `experienceScore` en el `.dat`.
 - [Carga de datos del jugador](carga-de-datos-del-jugador.md): la marca que distingue un archivo de antes del mod.
 - [Tests: inventario compartido](../tests/inventario-compartido.md)
+- [Estadísticas](estadisticas.md): los deltas positivos son la experiencia juntada de cada uno.
+- [Configuración](configuracion.md): `compartirExperiencia: false` corta el reparto.

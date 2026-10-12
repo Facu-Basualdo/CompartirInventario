@@ -43,6 +43,8 @@ El mismo tema en distintas áreas usa el mismo nombre de archivo (`claude/mod/in
 | Experiencia compartida | [experiencia](claude/mod/experiencia.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
 | Muerte grupal y respawn | [muerte-y-respawn](claude/mod/muerte-y-respawn.md) | [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
 | Migración del id (`inventariocompartido` → `soullink`) | [migracion-de-id](claude/mod/migracion-de-id.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
+| Estadísticas (`/soullink`, scoreboard) | [estadisticas](claude/mod/estadisticas.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
+| Configuración (`config/soullink.json`) | [configuracion](claude/mod/configuracion.md) | [configuracion](claude/tests/configuracion.md) |
 | Intercambiar lugar (`/intercambiar`) | [intercambiar-lugar](claude/mod/intercambiar-lugar.md) | [inventario-compartido](claude/tests/inventario-compartido.md) · [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
 
 ## Reglas de workflow

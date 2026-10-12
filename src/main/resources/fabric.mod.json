@@ -3,7 +3,7 @@
 	"id": "soullink",
 	"version": "${version}",
 	"name": "Soul Link",
-	"description": "Todos los jugadores del servidor comparten un único inventario (inventario, barra rápida, armadura y mano secundaria), el hambre, la vida y la experiencia en tiempo real.",
+	"description": "Todos los jugadores del servidor comparten un único inventario (inventario, barra rápida, armadura y mano secundaria), el hambre, la vida y la experiencia en tiempo real. Cuenta los intentos y de quién fue la culpa de cada muerte (/soullink).",
 	"authors": [],
 	"license": "MIT",
 	"icon": "assets/soullink/icon.png",

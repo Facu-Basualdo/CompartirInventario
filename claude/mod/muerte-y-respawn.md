@@ -51,3 +51,4 @@ Después vanilla llama a `ServerPlayer.restoreFrom(viejo, keepEverything)`:
 - [Experiencia](experiencia.md): por qué el jugador que reaparece adopta la experiencia compartida.
 - [Tests: jugadores de prueba](../tests/jugadores-de-prueba.md): por qué el test usa `setHealth(0)` + `die()` y no `kill()`.
 - [Tests: inventario compartido](../tests/inventario-compartido.md)
+- [Estadísticas](estadisticas.md): cada muerte del grupo termina un intento y se anota con su causa.

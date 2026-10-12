@@ -18,6 +18,8 @@ Extiende `SavedData` y se obtiene con `server.getDataStorage().computeIfAbsent(T
 | `experienceScore` | `Codec.INT` | El `totalExperience` compartido (puntaje de la pantalla de muerte). |
 | `initialized` | `Codec.BOOL` | Ver la migración en [carga de datos del jugador](carga-de-datos-del-jugador.md#migración-el-flag-initialized). |
 
+Las estadísticas van en otro archivo, `data/soullink/stats.dat`, con su propio `SavedData` (`GroupStats`): ver [estadísticas](estadisticas.md#persistencia).
+
 ## Gotchas
 
 **`isDirty()` devuelve siempre `true`.** Los `ItemStack` se mutan directamente (`shrink`, daño de herramientas, componentes) sin pasar por ningún método que pueda marcar el estado como sucio. El archivo es chico y sólo se escribe cuando el mundo se guarda, así que guardarlo siempre cuesta nada y evita perder cambios.
@@ -37,6 +39,7 @@ Extiende `SavedData` y se obtiene con `server.getDataStorage().computeIfAbsent(T
 ## Ver también
 
 - [Carga de datos del jugador](carga-de-datos-del-jugador.md)
+- [Estadísticas](estadisticas.md)
 - [Inventario compartido](inventario-compartido.md)
 - [Experiencia](experiencia.md)
 - [Minecraft 26.x sin ofuscar](../general/minecraft-26-sin-ofuscar.md): cómo se verificó lo de `readTagFromDisk` con `javap`.

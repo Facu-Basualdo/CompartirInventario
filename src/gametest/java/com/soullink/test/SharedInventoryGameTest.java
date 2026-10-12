@@ -9,7 +9,9 @@ import com.mojang.authlib.GameProfile;
 import io.netty.channel.embedded.EmbeddedChannel;
 import org.jspecify.annotations.Nullable;
 
+import com.soullink.GroupStats;
 import com.soullink.SharedInventoryState;
+import com.soullink.StatsScoreboard;
 
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 
@@ -33,7 +35,10 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityEquipment;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerSynchronizer;
@@ -47,6 +52,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.scores.ScoreHolder;
 import net.minecraft.world.phys.Vec3;
 
 public class SharedInventoryGameTest {
@@ -59,6 +65,10 @@ public class SharedInventoryGameTest {
 		ServerPlayer b = joinSurvivalPlayer(helper, "jugador-b");
 		ServerPlayer[] respawned = new ServerPlayer[1];
 		ServerPlayer[] veteran = new ServerPlayer[1];
+		// Las estadísticas quedan en el mundo de prueba entre corridas: se comparan contra lo que había al empezar
+		GroupStats stats = GroupStats.get(helper.getLevel().getServer());
+		int attemptBefore = stats.attempt();
+		float[] healthBefore = new float[1];
 
 		helper.startSequence()
 				.thenExecute(() -> {
@@ -156,10 +166,16 @@ public class SharedInventoryGameTest {
 					playerList.remove(veteran[0]);
 				})
 				.thenIdle(1)
-				.thenExecute(() -> a.setHealth(10))
+				.thenExecute(() -> {
+					healthBefore[0] = a.getHealth();
+					a.setHealth(10);
+				})
 				.thenIdle(1)
 				.thenExecute(() -> {
 					assertHealth(helper, b, 10, "B recibe el daño de A");
+					float lost = stat(stats, a).heartsLost() * 2;
+					helper.assertTrue(lost == healthBefore[0] - 10, Component.literal("A suma a sus estadísticas la vida que perdió (" + lost + ", esperado " + (healthBefore[0] - 10) + ")"));
+					helper.assertTrue(stat(stats, b).heartsLost() == 0, Component.literal("B no suma la vida que perdió por el golpe de A"));
 					b.heal(4);
 				})
 				.thenIdle(1)
@@ -196,12 +212,36 @@ public class SharedInventoryGameTest {
 				.thenExecute(() -> {
 					assertLevel(helper, respawned[0], 4, "A recibe la experiencia de B");
 					assertLevel(helper, b, 4, "B recibe la experiencia de A");
+					helper.assertTrue(Math.abs(stat(stats, a).experience() - 20) < 0.01, Component.literal("A suma los 20 puntos que juntó (" + stat(stats, a).experience() + ")"));
+					helper.assertTrue(Math.abs(stat(stats, b).experience() - 5) < 0.01, Component.literal("B suma los 5 puntos que juntó (" + stat(stats, b).experience() + ")"));
 					// Gastar niveles (encantar, yunque) también se comparte
 					b.giveExperienceLevels(-1);
+					// Un golpe que deja al grupo con 2 corazones o menos es un susto de quien lo recibió
+					b.setHealth(3);
 				})
 				.thenIdle(1)
 				.thenExecute(() -> {
 					assertLevel(helper, respawned[0], 3, "A ve los niveles que gastó B");
+					helper.assertTrue(Math.abs(stat(stats, b).experience() - 5) < 0.01, Component.literal("Gastar niveles no le resta a B la experiencia juntada"));
+					helper.assertTrue(GroupStats.Stat.SCARES.of(stat(stats, b)) == 1, Component.literal("B suma un susto"));
+					helper.assertTrue(GroupStats.Stat.SCARES.of(stat(stats, a)) == 0, Component.literal("A no suma el susto de B"));
+					b.setHealth(9);
+
+					// Matar un monstruo le suma al que lo mató
+					Zombie zombie = EntityTypes.ZOMBIE.create(helper.getLevel(), EntitySpawnReason.COMMAND);
+					BlockPos zombiePos = helper.absolutePos(new BlockPos(3, 1, 3));
+					zombie.setPos(zombiePos.getX() + 0.5, zombiePos.getY(), zombiePos.getZ() + 0.5);
+					helper.getLevel().addFreshEntity(zombie);
+					zombie.hurtServer(helper.getLevel(), b.damageSources().playerAttack(b), 1000);
+					helper.assertTrue(GroupStats.Stat.MOBS.of(stat(stats, b)) == 1, Component.literal("B suma el zombi que mató"));
+					helper.assertTrue(GroupStats.Stat.MOBS.of(stat(stats, a)) == 0, Component.literal("A no suma el zombi de B"));
+					// Lo que suelta el zombi se contaría como lo que tira el grupo al morir, más abajo
+					zombie.discard();
+					helper.getLevel().getEntitiesOfClass(Entity.class, zombie.getBoundingBox().inflate(4), e -> e instanceof ItemEntity || e instanceof ExperienceOrb).forEach(Entity::discard);
+				})
+				.thenIdle(1)
+				.thenExecute(() -> {
+					assertHealth(helper, respawned[0], 9, "A recibe la curación de B después del susto");
 
 					// /intercambiar sin argumento: con un solo compañero, cambian de lugar, de dimensión y de mirada
 					ServerLevel overworld = helper.getLevel();
@@ -242,6 +282,17 @@ public class SharedInventoryGameTest {
 					helper.assertTrue(droppedExperience(b) == 0, Component.literal("B no tira otra copia de la experiencia"));
 					helper.assertTrue(SharedInventoryState.get(helper.getLevel().getServer()).experiencePoints() == 0, Component.literal("La experiencia compartida se pierde al morir"));
 					assertFood(helper, b, 20, "El hambre compartida se reinicia al morir");
+
+					// La muerte queda en las estadísticas: culpa de A, que recibió más daño, y arranca otro intento
+					helper.assertTrue(stats.attempt() == attemptBefore + 1, Component.literal("Arranca el intento siguiente (" + stats.attempt() + ", antes " + attemptBefore + ")"));
+					helper.assertTrue(stats.attemptTicks() == 0, Component.literal("El reloj del intento nuevo arranca en 0 y no corre con todos muertos"));
+					helper.assertTrue(GroupStats.Stat.FAULTS.of(stat(stats, a)) == 1, Component.literal("La culpa es de A"));
+					helper.assertTrue(GroupStats.Stat.FAULTS.of(stat(stats, b)) == 0, Component.literal("B no tiene la culpa"));
+					GroupStats.Death death = stats.deaths().getLast();
+					helper.assertTrue(death.victim().equals("jugador-a") && death.attempt() == attemptBefore, Component.literal("La última muerte es de A en el intento " + attemptBefore + " (" + death + ")"));
+					var culpas = helper.getLevel().getServer().getScoreboard().getObjective(StatsScoreboard.objectiveName(GroupStats.Stat.FAULTS));
+					helper.assertTrue(culpas != null && helper.getLevel().getServer().getScoreboard().getOrCreatePlayerScore(ScoreHolder.forNameOnly("jugador-a"), culpas).get() == 1,
+							Component.literal("El scoreboard muestra la culpa de A"));
 					helper.getLevel().getEntitiesOfClass(Entity.class, b.getBoundingBox().inflate(20), e -> e instanceof ItemEntity || e instanceof ExperienceOrb).forEach(Entity::discard);
 					playerList.remove(respawned[0]);
 					playerList.remove(b);
@@ -346,6 +397,11 @@ public class SharedInventoryGameTest {
 				}
 			};
 		}
+	}
+
+	private static GroupStats.PlayerStats stat(GroupStats stats, ServerPlayer player) {
+		GroupStats.PlayerStats found = stats.of(player.getGameProfile().id());
+		return found != null ? found : GroupStats.PlayerStats.EMPTY;
 	}
 
 	private static int countDropped(ServerPlayer player, Item item) {
