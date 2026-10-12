@@ -1,4 +1,4 @@
-package com.inventariocompartido;
+package com.soullink;
 
 import java.util.ArrayList;
 import java.util.List;

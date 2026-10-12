@@ -1,7 +1,7 @@
-package com.inventariocompartido.mixin;
+package com.soullink.mixin;
 
-import com.inventariocompartido.SharedInventoryState;
-import com.inventariocompartido.SharedVitals;
+import com.soullink.SharedInventoryState;
+import com.soullink.SharedVitals;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,14 +15,14 @@ import net.minecraft.world.level.storage.ValueInput;
 @Mixin(FoodData.class)
 public abstract class FoodDataMixin {
 	@Unique
-	private int inventariocompartido$lastTick = -1;
+	private int soullink$lastTick = -1;
 
 	/**
 	 * Cada jugador llama a tick() desde su doTick(). Con el FoodData compartido eso lo correría una vez
 	 * por jugador y por tick: la regeneración natural y el daño por inanición irían al doble de velocidad.
 	 */
 	@Inject(method = "tick", at = @At("HEAD"), cancellable = true)
-	private void inventariocompartido$tickOncePerServerTick(ServerPlayer player, CallbackInfo ci) {
+	private void soullink$tickOncePerServerTick(ServerPlayer player, CallbackInfo ci) {
 		SharedInventoryState state = SharedInventoryState.active();
 		if (state == null || state.foodData() != (Object) this) {
 			return;
@@ -34,16 +34,16 @@ public abstract class FoodDataMixin {
 			return;
 		}
 		int now = player.level().getServer().getTickCount();
-		if (this.inventariocompartido$lastTick == now) {
+		if (this.soullink$lastTick == now) {
 			ci.cancel();
 			return;
 		}
-		this.inventariocompartido$lastTick = now;
+		this.soullink$lastTick = now;
 	}
 
 	// readAdditionalSaveData() pisa el hambre compartida con la que el jugador tenía guardada.
 	@Inject(method = "readAdditionalSaveData", at = @At("HEAD"), cancellable = true)
-	private void inventariocompartido$keepSharedFood(ValueInput input, CallbackInfo ci) {
+	private void soullink$keepSharedFood(ValueInput input, CallbackInfo ci) {
 		if (SharedInventoryState.shouldBlockLoadInto(this)) {
 			ci.cancel();
 		}

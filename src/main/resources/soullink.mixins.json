@@ -1,6 +1,6 @@
 {
 	"required": true,
-	"package": "com.inventariocompartido.mixin",
+	"package": "com.soullink.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
 		"AbstractContainerMenuMixin",

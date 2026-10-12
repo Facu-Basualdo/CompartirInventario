@@ -1,8 +1,8 @@
-package com.inventariocompartido.mixin;
+package com.soullink.mixin;
 
 import java.util.EnumMap;
 
-import com.inventariocompartido.SharedInventoryState;
+import com.soullink.SharedInventoryState;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,7 +22,7 @@ public abstract class EntityEquipmentMixin {
 
 	// setAll() hace clear() + putAll(): al cargar los datos de un jugador borraría la armadura compartida.
 	@Inject(method = "setAll", at = @At("HEAD"), cancellable = true)
-	private void inventariocompartido$keepSharedEquipment(EntityEquipment other, CallbackInfo ci) {
+	private void soullink$keepSharedEquipment(EntityEquipment other, CallbackInfo ci) {
 		if (SharedInventoryState.shouldBlockLoadInto(this.items)) {
 			ci.cancel();
 		}

@@ -1,6 +1,6 @@
-package com.inventariocompartido.mixin;
+package com.soullink.mixin;
 
-import com.inventariocompartido.SharedInventoryState;
+import com.soullink.SharedInventoryState;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -30,18 +30,18 @@ public abstract class InventoryMixin {
 	 * (equipment). El slot seleccionado y el ítem del cursor siguen siendo de cada jugador.
 	 */
 	@Inject(method = "<init>", at = @At("TAIL"))
-	private void inventariocompartido$useSharedStorage(Player player, EntityEquipment equipment, CallbackInfo ci) {
+	private void soullink$useSharedStorage(Player player, EntityEquipment equipment, CallbackInfo ci) {
 		SharedInventoryState state = SharedInventoryState.forPlayer(player);
 		if (state == null) {
 			return;
 		}
 		this.items = state.items();
-		((EntityEquipmentAccessor) equipment).inventariocompartido$setItems(state.equipmentItems());
+		((EntityEquipmentAccessor) equipment).soullink$setItems(state.equipmentItems());
 	}
 
 	// load() vacía la lista antes de rellenarla con lo que el jugador tenía guardado.
 	@Inject(method = "load", at = @At("HEAD"), cancellable = true)
-	private void inventariocompartido$keepSharedItems(ValueInput.TypedInputList<ItemStackWithSlot> input, CallbackInfo ci) {
+	private void soullink$keepSharedItems(ValueInput.TypedInputList<ItemStackWithSlot> input, CallbackInfo ci) {
 		if (SharedInventoryState.shouldBlockLoadInto(this.items)) {
 			ci.cancel();
 		}

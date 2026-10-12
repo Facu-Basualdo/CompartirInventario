@@ -55,7 +55,7 @@ Síntoma sin esto: dos jugadores pican bloques distintos con la misma hacha y, c
 | Dónde | Qué hace |
 |---|---|
 | `ServerPlayerGameModeMixin`, `@At("HEAD")` de `handleBlockBreakAction` | Con `START_DESTROY_BLOCK` anota `player.getMainHandItem()`: el mismo ítem que anota el cliente |
-| `ServerPlayerGameModeMixin.inventariocompartido$isMiningWith(stack)` (interfaz `BlockMiner`) | `true` si `isDestroyingBlock`, el stack es **el mismo objeto** que se anotó y no está vacío |
+| `ServerPlayerGameModeMixin.soullink$isMiningWith(stack)` (interfaz `BlockMiner`) | `true` si `isDestroyingBlock`, el stack es **el mismo objeto** que se anotó y no está vacío |
 | `AbstractContainerMenuMixin`, `@At("HEAD")` de `synchronizeSlotToRemote`, cancelable | Si el slot es del `Inventory` de un `ServerPlayer`, es su slot seleccionado y ese jugador está picando con ese stack, no lo manda |
 
 - **Retener funciona porque no se marca como enviado.** `synchronizeSlotToRemote` cancela antes de `RemoteSlot.force()`, así que el próximo `broadcastChanges()` vuelve a ver la diferencia. Cuando el jugador termina (`STOP_DESTROY_BLOCK`) o suelta (`ABORT_DESTROY_BLOCK`), vanilla pone `isDestroyingBlock = false` y el slot sale en el siguiente broadcast.

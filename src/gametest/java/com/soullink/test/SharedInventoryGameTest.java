@@ -1,4 +1,4 @@
-package com.inventariocompartido.test;
+package com.soullink.test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,7 @@ import com.mojang.authlib.GameProfile;
 import io.netty.channel.embedded.EmbeddedChannel;
 import org.jspecify.annotations.Nullable;
 
-import com.inventariocompartido.SharedInventoryState;
+import com.soullink.SharedInventoryState;
 
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 

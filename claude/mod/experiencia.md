@@ -32,7 +32,7 @@ No se usa `setExperienceLevels()` para eso: tiene un `if (nivel == experienceLev
 |---|---|
 | Entra o reaparece un jugador (no está en `syncedExperience`) | **Adopta** la experiencia compartida. Lo que tenía, o lo que juntó en ese mismo tick, se pierde |
 | Mod recién instalado (`experience` = `UNKNOWN_EXPERIENCE`, -1) | El primero que entra aporta la suya |
-| Entra con un archivo **de antes del mod** (sin la marca `InventarioCompartido`) | **Suma** la suya a la compartida, una sola vez |
+| Entra con un archivo **de antes del mod** (sin la marca `SoulLink`) | **Suma** la suya a la compartida, una sola vez |
 | Muere el grupo, sin `keepInventory` | La compartida vuelve a 0 (nivel y puntaje), como un jugador recién creado |
 | Muere el grupo, con `keepInventory` | Se conserva |
 | Creativo o espectador | No participa (mismo `SharedVitals.participates`). Al volver a supervivencia adopta la compartida |

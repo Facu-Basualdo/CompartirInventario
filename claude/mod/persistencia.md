@@ -2,7 +2,7 @@
 
 [← Índice Mod](INDICE.md)
 
-**El inventario compartido se guarda en el mundo, no en los jugadores:** `world/data/inventariocompartido/shared_inventory.dat`. Vanilla sigue escribiendo el inventario en cada `playerdata/<uuid>.dat` (porque lee de la lista compartida), pero esos datos **se ignoran al cargar** (ver [carga de datos del jugador](carga-de-datos-del-jugador.md)).
+**El inventario compartido se guarda en el mundo, no en los jugadores:** `world/data/soullink/shared_inventory.dat`. Vanilla sigue escribiendo el inventario en cada `playerdata/<uuid>.dat` (porque lee de la lista compartida), pero esos datos **se ignoran al cargar** (ver [carga de datos del jugador](carga-de-datos-del-jugador.md)).
 
 ## `SharedInventoryState`
 

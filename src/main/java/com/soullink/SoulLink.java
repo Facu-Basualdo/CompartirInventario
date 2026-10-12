@@ -1,4 +1,4 @@
-package com.inventariocompartido;
+package com.soullink;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -11,13 +11,16 @@ import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class InventarioCompartido implements ModInitializer {
-	public static final String MOD_ID = "inventariocompartido";
+public class SoulLink implements ModInitializer {
+	public static final String MOD_ID = "soullink";
 
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	@Override
 	public void onInitialize() {
+		// Antes que todo: con el id viejo, el estado compartido está en otra carpeta
+		ServerLifecycleEvents.SERVER_STARTING.register(IdMigration::migrateWorldData);
+
 		// El primer jugador que entra al mundo (con el mod recién instalado) aporta su inventario
 		// como punto de partida. A partir de ahí, el inventario compartido es la única fuente de verdad.
 		// A los que tenían partida antes del mod se les devuelven sus ítems en un cofre.

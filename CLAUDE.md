@@ -2,6 +2,8 @@
 
 Mod de Fabric para **Minecraft Java 26.3** que hace que todos los jugadores del servidor compartan en tiempo real un único inventario (inventario, barra rápida, armadura y mano secundaria), una sola barra de hambre, una sola barra de vida y una sola barra de experiencia. Java 25, Gradle 9.7 + Fabric Loom 1.18, Fabric Loader 0.19.5, Fabric API 0.162.0+26.3. Toda la lógica corre en el servidor.
 
+**El id del mod es `soullink` desde la 2.0.0 (antes `inventariocompartido`).** Lo guardado con el id viejo se pasa solo al arrancar: ver [migración del id](claude/mod/migracion-de-id.md). No lo vuelvas a cambiar sin una migración, y no renombres la marca `InventarioCompartido` del archivo de cada jugador.
+
 ## Cómo obtener contexto
 
 1. Ubicá el **área** en la tabla de abajo.
@@ -40,6 +42,7 @@ El mismo tema en distintas áreas usa el mismo nombre de archivo (`claude/mod/in
 | Carga de datos del jugador sin pisar lo compartido, y cofre con los ítems de antes del mod | [carga-de-datos-del-jugador](claude/mod/carga-de-datos-del-jugador.md) | [inventario-compartido](claude/tests/inventario-compartido.md) · [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
 | Experiencia compartida | [experiencia](claude/mod/experiencia.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
 | Muerte grupal y respawn | [muerte-y-respawn](claude/mod/muerte-y-respawn.md) | [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
+| Migración del id (`inventariocompartido` → `soullink`) | [migracion-de-id](claude/mod/migracion-de-id.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
 | Intercambiar lugar (`/intercambiar`) | [intercambiar-lugar](claude/mod/intercambiar-lugar.md) | [inventario-compartido](claude/tests/inventario-compartido.md) · [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
 
 ## Reglas de workflow
@@ -53,8 +56,8 @@ El mismo tema en distintas áreas usa el mismo nombre de archivo (`claude/mod/in
 
 ## Convenciones de código
 
-- Paquete `com.inventariocompartido`; mixins en `com.inventariocompartido.mixin`, registrados en `src/main/resources/inventariocompartido.mixins.json`.
-- **Métodos y accessors agregados por mixins llevan prefijo `inventariocompartido$`** para no chocar con otros mods.
+- Paquete `com.soullink`; mixins en `com.soullink.mixin`, registrados en `src/main/resources/soullink.mixins.json`.
+- **Métodos y accessors agregados por mixins llevan prefijo `soullink$`** para no chocar con otros mods.
 - Indentación con tabs, imports agrupados: java/terceros → `net.fabricmc` → `net.minecraft`.
 - Comentarios sólo para el porqué (qué rompería vanilla si no estuviera), no para parafrasear.
 

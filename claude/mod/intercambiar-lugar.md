@@ -2,7 +2,7 @@
 
 [← Índice Mod](INDICE.md)
 
-**`/intercambiar [jugador]` deja a cada uno donde estaba el otro: posición, dimensión y hacia dónde mira.** Lo puede usar cualquiera, sin permisos de operador. Está en `SwapPlaces` y se registra con `CommandRegistrationCallback` en `InventarioCompartido`. Es un comando de brigadier con un `EntityArgument.player()`, así que un cliente vanilla lo autocompleta sin tener el mod.
+**`/intercambiar [jugador]` deja a cada uno donde estaba el otro: posición, dimensión y hacia dónde mira.** Lo puede usar cualquiera, sin permisos de operador. Está en `SwapPlaces` y se registra con `CommandRegistrationCallback` en `SoulLink`. Es un comando de brigadier con un `EntityArgument.player()`, así que un cliente vanilla lo autocompleta sin tener el mod.
 
 ## A quién elige
 

@@ -1,8 +1,8 @@
-package com.inventariocompartido.mixin;
+package com.soullink.mixin;
 
 import java.util.function.Supplier;
 
-import com.inventariocompartido.BlockMiner;
+import com.soullink.BlockMiner;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -31,12 +31,12 @@ public abstract class AbstractContainerMenuMixin {
 	 * como no se marca como enviado, el próximo broadcastChanges lo vuelve a intentar.
 	 */
 	@Inject(method = "synchronizeSlotToRemote", at = @At("HEAD"), cancellable = true)
-	private void inventariocompartido$holdToolWhileMining(int slotIndex, ItemStack stack, Supplier<ItemStack> copy, CallbackInfo ci) {
+	private void soullink$holdToolWhileMining(int slotIndex, ItemStack stack, Supplier<ItemStack> copy, CallbackInfo ci) {
 		Slot slot = this.slots.get(slotIndex);
 		if (slot.container instanceof Inventory inventory
 				&& slot.getContainerSlot() == inventory.getSelectedSlot()
 				&& inventory.player instanceof ServerPlayer player
-				&& ((BlockMiner) player.gameMode).inventariocompartido$isMiningWith(stack)) {
+				&& ((BlockMiner) player.gameMode).soullink$isMiningWith(stack)) {
 			ci.cancel();
 		}
 	}

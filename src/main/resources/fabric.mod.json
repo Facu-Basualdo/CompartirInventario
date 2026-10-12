@@ -1,20 +1,20 @@
 {
 	"schemaVersion": 1,
-	"id": "inventariocompartido",
+	"id": "soullink",
 	"version": "${version}",
 	"name": "Soul Link",
 	"description": "Todos los jugadores del servidor comparten un único inventario (inventario, barra rápida, armadura y mano secundaria), el hambre, la vida y la experiencia en tiempo real.",
 	"authors": [],
 	"license": "MIT",
-	"icon": "assets/inventariocompartido/icon.png",
+	"icon": "assets/soullink/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.inventariocompartido.InventarioCompartido"
+			"com.soullink.SoulLink"
 		]
 	},
 	"mixins": [
-		"inventariocompartido.mixins.json"
+		"soullink.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.19.5",

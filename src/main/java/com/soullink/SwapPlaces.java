@@ -1,4 +1,4 @@
-package com.inventariocompartido;
+package com.soullink;
 
 import java.util.List;
 import java.util.Set;

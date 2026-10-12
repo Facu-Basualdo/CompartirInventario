@@ -1,4 +1,4 @@
-package com.inventariocompartido;
+package com.soullink;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +55,7 @@ public final class PersonalItemsChest {
 			Containers.dropItemStack(level, player.getX(), player.getY(), player.getZ(), items.get(next));
 		}
 
-		InventarioCompartido.LOGGER.info("Ítems de antes del mod de {} devueltos en {} cofre(s){}",
+		SoulLink.LOGGER.info("Ítems de antes del mod de {} devueltos en {} cofre(s){}",
 				player.getGameProfile().name(), chests.size(), dropped ? " y tirados a sus pies" : "");
 
 		// El próximo guardado del jugador lleva la marca y ya no vuelve a rescatar estos ítems. Si el cofre

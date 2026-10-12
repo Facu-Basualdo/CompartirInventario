@@ -1,10 +1,10 @@
-package com.inventariocompartido.mixin;
+package com.soullink.mixin;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.inventariocompartido.SharedExperience;
-import com.inventariocompartido.SharedInventoryState;
+import com.soullink.SharedExperience;
+import com.soullink.SharedInventoryState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -29,6 +29,8 @@ public abstract class PlayerMixin {
 	 * Marca que el inventario guardado en el archivo del jugador es una copia del compartido. Un archivo
 	 * sin la marca es de antes de instalar el mod: ese inventario es del jugador y no se puede tirar.
 	 */
+	// Con el nombre de antes a propósito: ya está en el archivo de cada jugador. Si cambiara, todos parecerían de antes
+	// del mod y se les devolverían otra vez sus ítems viejos en un cofre (duplicados)
 	@Unique
 	private static final String SHARED_MARKER = "InventarioCompartido";
 
@@ -37,7 +39,7 @@ public abstract class PlayerMixin {
 
 	// Igual que el inventario: cada ServerPlayer que se crea (login, respawn) usa el mismo FoodData.
 	@Inject(method = "<init>", at = @At("TAIL"))
-	private void inventariocompartido$useSharedFood(CallbackInfo ci) {
+	private void soullink$useSharedFood(CallbackInfo ci) {
 		SharedInventoryState state = SharedInventoryState.forPlayer((Player) (Object) this);
 		if (state != null) {
 			this.foodData = state.foodData();
@@ -45,7 +47,7 @@ public abstract class PlayerMixin {
 	}
 
 	@Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
-	private void inventariocompartido$markSharedSave(ValueOutput output, CallbackInfo ci) {
+	private void soullink$markSharedSave(ValueOutput output, CallbackInfo ci) {
 		if (SharedInventoryState.forPlayer((Player) (Object) this) != null) {
 			output.putBoolean(SHARED_MARKER, true);
 		}
@@ -57,7 +59,7 @@ public abstract class PlayerMixin {
 	 * rescatan esos ítems para dejarlos en un cofre cuando el jugador termine de entrar.
 	 */
 	@Inject(method = "readAdditionalSaveData", at = @At("HEAD"))
-	private void inventariocompartido$rescuePersonalItems(ValueInput input, CallbackInfo ci) {
+	private void soullink$rescuePersonalItems(ValueInput input, CallbackInfo ci) {
 		Player self = (Player) (Object) this;
 		SharedInventoryState state = SharedInventoryState.forPlayer(self);
 		if (state == null || !state.isInitialized() || input.getBooleanOr(SHARED_MARKER, false)) {
@@ -73,7 +75,7 @@ public abstract class PlayerMixin {
 			}
 		}
 		input.read("equipment", EntityEquipment.CODEC).ifPresent(equipment -> {
-			for (ItemStack stack : ((EntityEquipmentAccessor) equipment).inventariocompartido$getItems().values()) {
+			for (ItemStack stack : ((EntityEquipmentAccessor) equipment).soullink$getItems().values()) {
 				if (!stack.isEmpty()) {
 					items.add(stack);
 				}
@@ -86,7 +88,7 @@ public abstract class PlayerMixin {
 
 	// Sólo cuenta para los orbes que se tiran al morir: los demás del grupo ya no tienen nada que tirar.
 	@Inject(method = "getBaseExperienceReward", at = @At("HEAD"), cancellable = true)
-	private void inventariocompartido$dropSharedExperienceOnce(ServerLevel level, CallbackInfoReturnable<Integer> cir) {
+	private void soullink$dropSharedExperienceOnce(ServerLevel level, CallbackInfoReturnable<Integer> cir) {
 		if ((Object) this instanceof ServerPlayer player && !SharedExperience.shouldDropExperience(player)) {
 			cir.setReturnValue(0);
 		}

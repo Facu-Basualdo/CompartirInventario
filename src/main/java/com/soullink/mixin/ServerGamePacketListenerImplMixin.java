@@ -1,6 +1,6 @@
-package com.inventariocompartido.mixin;
+package com.soullink.mixin;
 
-import com.inventariocompartido.SharedInventorySync;
+import com.soullink.SharedInventorySync;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -43,7 +43,7 @@ public abstract class ServerGamePacketListenerImplMixin {
 			// Uno por handler: si un nombre cambia en otra versión, que falle al cargar en vez de dejar de sincronizar.
 			require = 14
 	)
-	private void inventariocompartido$broadcastToOthers(CallbackInfo ci) {
+	private void soullink$broadcastToOthers(CallbackInfo ci) {
 		SharedInventorySync.broadcastToOthers(this.player);
 	}
 }

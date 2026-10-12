@@ -1,4 +1,4 @@
-package com.inventariocompartido.mixin;
+package com.soullink.mixin;
 
 import java.util.EnumMap;
 
@@ -13,9 +13,9 @@ import net.minecraft.world.item.ItemStack;
 @Mixin(EntityEquipment.class)
 public interface EntityEquipmentAccessor {
 	@Accessor("items")
-	EnumMap<EquipmentSlot, ItemStack> inventariocompartido$getItems();
+	EnumMap<EquipmentSlot, ItemStack> soullink$getItems();
 
 	@Mutable
 	@Accessor("items")
-	void inventariocompartido$setItems(EnumMap<EquipmentSlot, ItemStack> items);
+	void soullink$setItems(EnumMap<EquipmentSlot, ItemStack> items);
 }

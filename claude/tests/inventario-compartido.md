@@ -2,7 +2,7 @@
 
 [← Índice Tests](INDICE.md)
 
-`src/gametest/java/com/inventariocompartido/test/SharedInventoryGameTest.java`, método `playersShareInventoryHungerAndHealth`. Se corre con `gradlew runGameTest`, que levanta un servidor sin ventana, ejecuta todos los `@GameTest`, guarda el mundo en `build/run/gameTest/` y sale con error si algo falla.
+`src/gametest/java/com/soullink/test/SharedInventoryGameTest.java`, método `playersShareInventoryHungerAndHealth`. Se corre con `gradlew runGameTest`, que levanta un servidor sin ventana, ejecuta todos los `@GameTest`, guarda el mundo en `build/run/gameTest/` y sale con error si algo falla.
 
 ## Un solo método, a propósito
 
@@ -60,7 +60,11 @@ En la muerte grupal, A es el que más vida pierde (5 contra 4) y B queda lejos p
 - **El caso sin lugar para el cofre** (ítems tirados a los pies).
 - **Que el cofre quede en disco.** El guardado forzado (`saveAllChunks`) se verificó a mano pasando `suppressLog = false`: aparecen los "Saving chunks for level…" justo después del log del cofre. Ninguna aserción lo comprueba.
 - **Los casos en que `/intercambiar` se niega** (nadie más, varios sin nombre, un jugador muerto) ni la caída reiniciada.
-- **El guardado y la recarga del `.dat` entre reinicios.** El archivo se escribe (en `build/run/gameTest/world/data/inventariocompartido/`), pero ningún test reinicia el servidor y lo lee.
+- **El guardado y la recarga del `.dat` entre reinicios.** El archivo se escribe (en `build/run/gameTest/world/data/soullink/`), pero ningún test reinicia el servidor y lo lee.
+
+## La migración del id, aparte
+
+`IdMigrationGameTest` prueba `IdMigration.moveIfMissing` sobre una carpeta temporal (mueve, no pisa uno nuevo, sin archivo viejo no hace nada). Va en otra clase y no adentro del test grande porque no toca el estado global: el mundo del test es de todos los tests. Ver [migración del id](../mod/migracion-de-id.md).
 
 ## Ver también
 

@@ -10,7 +10,7 @@ repositories {
 
 loom {
 	mods {
-		"inventariocompartido" {
+		"soullink" {
 			sourceSet sourceSets.main
 		}
 	}
@@ -64,7 +64,7 @@ java {
 fabricApi {
 	configureTests {
 		createSourceSet = true
-		modId = "inventariocompartido-test"
+		modId = "soullink-test"
 		enableGameTests = true
 		enableClientGameTests = false
 		eula = true

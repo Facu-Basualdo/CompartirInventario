@@ -1,4 +1,4 @@
-package com.inventariocompartido;
+package com.soullink;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -11,8 +11,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import com.inventariocompartido.mixin.EntityEquipmentAccessor;
-import com.inventariocompartido.mixin.FoodDataAccessor;
+import com.soullink.mixin.EntityEquipmentAccessor;
+import com.soullink.mixin.FoodDataAccessor;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import org.jspecify.annotations.Nullable;
@@ -34,12 +34,12 @@ import net.minecraft.world.level.saveddata.SavedDataType;
  * Lo que comparten todos los jugadores del servidor: inventario, armadura, hambre, vida y experiencia.
  *
  * <p>Inventario, armadura y hambre se comparten por referencia: cada jugador apunta a estos mismos
- * objetos (ver {@link com.inventariocompartido.mixin.InventoryMixin} y
- * {@link com.inventariocompartido.mixin.PlayerMixin}). La vida no se puede compartir así porque vive
+ * objetos (ver {@link com.soullink.mixin.InventoryMixin} y
+ * {@link com.soullink.mixin.PlayerMixin}). La vida no se puede compartir así porque vive
  * en los datos sincronizados de cada entidad; la reparte {@link SharedVitals} al final de cada tick. La
  * experiencia tampoco (son campos primitivos): la reparte {@link SharedExperience}.
  *
- * <p>Se guarda en {@code data/inventariocompartido/shared_inventory.dat} dentro del mundo.
+ * <p>Se guarda en {@code data/soullink/shared_inventory.dat} dentro del mundo.
  */
 public class SharedInventoryState extends SavedData {
 	/** Vida desconocida: nadie la fijó todavía, o el grupo acaba de morir. */
@@ -51,7 +51,7 @@ public class SharedInventoryState extends SavedData {
 	private static final Codec<FoodData> FOOD_CODEC = RecordCodecBuilder.create(instance -> instance.group(
 			Codec.INT.optionalFieldOf("level", 20).forGetter(FoodData::getFoodLevel),
 			Codec.FLOAT.optionalFieldOf("saturation", 5.0F).forGetter(FoodData::getSaturationLevel),
-			Codec.FLOAT.optionalFieldOf("exhaustion", 0.0F).forGetter(food -> ((FoodDataAccessor) food).inventariocompartido$getExhaustionLevel())
+			Codec.FLOAT.optionalFieldOf("exhaustion", 0.0F).forGetter(food -> ((FoodDataAccessor) food).soullink$getExhaustionLevel())
 	).apply(instance, (level, saturation, exhaustion) -> {
 		FoodData food = new FoodData();
 		setFood(food, level, saturation, exhaustion);
@@ -72,7 +72,7 @@ public class SharedInventoryState extends SavedData {
 
 	// DataFixTypes null: Fabric API se encarga de que no se intente aplicar data fixers a datos de mods.
 	private static final SavedDataType<SharedInventoryState> TYPE = new SavedDataType<>(
-			InventarioCompartido.id("shared_inventory"), SharedInventoryState::new, CODEC, null);
+			SoulLink.id("shared_inventory"), SharedInventoryState::new, CODEC, null);
 
 	// Estado del servidor que está corriendo ahora. Lo usan los mixins que no tienen acceso al servidor.
 	private static @Nullable SharedInventoryState active;
@@ -160,7 +160,7 @@ public class SharedInventoryState extends SavedData {
 	}
 
 	public EnumMap<EquipmentSlot, ItemStack> equipmentItems() {
-		return ((EntityEquipmentAccessor) this.equipment).inventariocompartido$getItems();
+		return ((EntityEquipmentAccessor) this.equipment).soullink$getItems();
 	}
 
 	public FoodData foodData() {
@@ -248,7 +248,7 @@ public class SharedInventoryState extends SavedData {
 	private static void setFood(FoodData food, int level, float saturation, float exhaustion) {
 		food.setFoodLevel(level);
 		food.setSaturation(saturation);
-		((FoodDataAccessor) food).inventariocompartido$setExhaustionLevel(exhaustion);
+		((FoodDataAccessor) food).soullink$setExhaustionLevel(exhaustion);
 	}
 
 	private List<ItemStackWithSlot> itemsWithSlots() {

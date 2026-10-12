@@ -53,8 +53,8 @@ El mismo tema en distintas áreas usa el mismo nombre de archivo (`Codex/mod/inv
 
 ## Convenciones de código
 
-- Paquete `com.inventariocompartido`; mixins en `com.inventariocompartido.mixin`, registrados en `src/main/resources/inventariocompartido.mixins.json`.
-- **Métodos y accessors agregados por mixins llevan prefijo `inventariocompartido$`** para no chocar con otros mods.
+- Paquete `com.soullink`; mixins en `com.soullink.mixin`, registrados en `src/main/resources/soullink.mixins.json`.
+- **Métodos y accessors agregados por mixins llevan prefijo `soullink$`** para no chocar con otros mods.
 - Indentación con tabs, imports agrupados: java/terceros → `net.fabricmc` → `net.minecraft`.
 - Comentarios sólo para el porqué (qué rompería vanilla si no estuviera), no para parafrasear.
 

@@ -41,7 +41,7 @@ Los ítems personales de los demás jugadores no entran a lo compartido, pero **
 
 Síntoma que esto evita: instalás el mod en una partida en curso, entra el segundo jugador y **su inventario desaparece para siempre**.
 
-**El archivo de cada jugador siempre trae un inventario; la marca `InventarioCompartido` dice si es suyo o una copia del compartido.** `PlayerMixin.addAdditionalSaveData` escribe `InventarioCompartido: true` en cada guardado hecho con el mod. Sin esa marca no hay forma de distinguir: después de instalar el mod, vanilla sigue guardando en `playerdata/<uuid>.dat` el inventario que el jugador ve (o sea, el compartido). Si se rescataran ítems en cada login, se **duplicaría** el inventario compartido en un cofre cada vez que alguien entra.
+**El archivo de cada jugador siempre trae un inventario; la marca `InventarioCompartido` dice si es suyo o una copia del compartido.** La clave quedó con el nombre de antes a propósito cuando el id pasó a `soullink`: ya está en el archivo de cada jugador, y con otra clave todos parecerían de antes del mod y recibirían otra vez sus ítems viejos (duplicados). `PlayerMixin.addAdditionalSaveData` escribe `SoulLink: true` en cada guardado hecho con el mod. Sin esa marca no hay forma de distinguir: después de instalar el mod, vanilla sigue guardando en `playerdata/<uuid>.dat` el inventario que el jugador ve (o sea, el compartido). Si se rescataran ítems en cada login, se **duplicaría** el inventario compartido en un cofre cada vez que alguien entra.
 
 Flujo:
 

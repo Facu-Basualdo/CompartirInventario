@@ -1,6 +1,6 @@
-package com.inventariocompartido.mixin;
+package com.soullink.mixin;
 
-import com.inventariocompartido.BlockMiner;
+import com.soullink.BlockMiner;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,18 +26,18 @@ public abstract class ServerPlayerGameModeMixin implements BlockMiner {
 	private boolean isDestroyingBlock;
 
 	@Unique
-	private ItemStack inventariocompartido$destroyingItem = ItemStack.EMPTY;
+	private ItemStack soullink$destroyingItem = ItemStack.EMPTY;
 
 	// Es el mismo ítem que el cliente anota al empezar a picar (MultiPlayerGameMode.destroyingItem).
 	@Inject(method = "handleBlockBreakAction", at = @At("HEAD"))
-	private void inventariocompartido$rememberDestroyingItem(BlockPos pos, ServerboundPlayerActionPacket.Action action, Direction direction, int maxY, int sequence, CallbackInfo ci) {
+	private void soullink$rememberDestroyingItem(BlockPos pos, ServerboundPlayerActionPacket.Action action, Direction direction, int maxY, int sequence, CallbackInfo ci) {
 		if (action == ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK) {
-			this.inventariocompartido$destroyingItem = this.player.getMainHandItem();
+			this.soullink$destroyingItem = this.player.getMainHandItem();
 		}
 	}
 
 	@Override
-	public boolean inventariocompartido$isMiningWith(ItemStack stack) {
-		return this.isDestroyingBlock && stack == this.inventariocompartido$destroyingItem && !stack.isEmpty();
+	public boolean soullink$isMiningWith(ItemStack stack) {
+		return this.isDestroyingBlock && stack == this.soullink$destroyingItem && !stack.isEmpty();
 	}
 }

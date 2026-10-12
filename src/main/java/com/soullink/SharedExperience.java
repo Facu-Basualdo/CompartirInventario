@@ -1,10 +1,10 @@
-package com.inventariocompartido;
+package com.soullink;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.inventariocompartido.mixin.ServerPlayerAccessor;
+import com.soullink.mixin.ServerPlayerAccessor;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -115,7 +115,7 @@ public final class SharedExperience {
 		player.totalExperience = score;
 		// Vanilla sólo reenvía la barra cuando cambia totalExperience: sin esto, si sólo cambia el nivel (al
 		// encantar) el cliente no se entera.
-		((ServerPlayerAccessor) player).inventariocompartido$setLastSentExp(-1);
+		((ServerPlayerAccessor) player).soullink$setLastSentExp(-1);
 	}
 
 	private static double pointsOf(ServerPlayer player) {

@@ -1,4 +1,4 @@
-package com.inventariocompartido;
+package com.soullink;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
