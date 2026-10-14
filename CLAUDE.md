@@ -68,4 +68,4 @@ El mismo tema en distintas áreas usa el mismo nombre de archivo (`claude/mod/in
 
 ## Qué NO va en el grafo
 
-Planes, investigaciones, auditorías y borradores van en `docs/` y se leen a demanda; `claude/` es sólo contexto permanente. Hoy no hay nada en `docs/`.
+Planes, investigaciones, auditorías y borradores van en `docs/` y se leen a demanda; `claude/` es sólo contexto permanente. Hoy está sólo `docs/curseforge.md`, la descripción de la página de CurseForge (en inglés): actualizala cuando cambie algo que se ve en el juego.
