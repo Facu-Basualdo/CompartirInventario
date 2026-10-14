@@ -33,7 +33,8 @@ import net.minecraft.network.chat.Component;
  *                        (cada jugador ve los mensajes en el idioma de su cliente, ver {@link Lang})
  */
 public record SoulLinkConfig(boolean shareExperience, boolean announceDeaths, Optional<GroupStats.Stat> sidebar, double scareHearts, String language) {
-	public static final SoulLinkConfig DEFAULT = new SoulLinkConfig(true, true, Optional.of(GroupStats.Stat.FAULTS), 2, Lang.ENGLISH);
+	// Sin barra lateral: las culpas a la vista todo el tiempo molestan a quien no las busca. Se prende a mano
+	public static final SoulLinkConfig DEFAULT = new SoulLinkConfig(true, true, Optional.empty(), 2, Lang.ENGLISH);
 
 	private static final String NO_SIDEBAR = "ninguna";
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();

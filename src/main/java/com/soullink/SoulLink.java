@@ -15,6 +15,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.monster.Enemy;
 
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,12 +80,17 @@ public class SoulLink implements ModInitializer {
 		return config;
 	}
 
-	/** Vuelve a leer el archivo. Si está roto, se queda con la config que había. */
-	public static SoulLinkConfig.Reading reloadConfig(MinecraftServer server) {
+	/**
+	 * Vuelve a leer el archivo. Si está roto, se queda con la config que había. {@code server} es null desde la
+	 * pantalla de Mod Menu sin un mundo abierto: la barra lateral se pone al arrancar el próximo.
+	 */
+	public static SoulLinkConfig.Reading reloadConfig(@Nullable MinecraftServer server) {
 		SoulLinkConfig.Reading reading = SoulLinkConfig.load(configFile());
 		if (reading.ok()) {
 			config = reading.config();
-			StatsScoreboard.applySidebar(server);
+			if (server != null) {
+				StatsScoreboard.applySidebar(server);
+			}
 		}
 		return reading;
 	}

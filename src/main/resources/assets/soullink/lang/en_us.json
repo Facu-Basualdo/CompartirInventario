@@ -1,16 +1,13 @@
 {
 	"modmenu.descriptionTranslation.soullink": "Linked players share one inventory (main, hotbar, armor and offhand), hunger, health and experience in real time. Link everyone or split players into groups (2 and 2, or however you like). Tracks attempts and whose fault each death was (/soullink). Server-side: vanilla clients can join.",
-
 	"soullink.stat.culpas": "Deaths caused",
 	"soullink.stat.corazones": "Hearts lost",
 	"soullink.stat.sustos": "Close calls",
 	"soullink.stat.experiencia": "Experience gathered",
 	"soullink.stat.mobs": "Mobs killed",
-
 	"soullink.death.announce": "☠ Attempt #%s ended after %s. Blame: %s",
 	"soullink.death.announce_group": "☠ Group %s: attempt #%s ended after %s. Blame: %s",
 	"soullink.death.record": " (record: %s)",
-
 	"soullink.stats.title": "Soul Link · attempt #%s",
 	"soullink.stats.title_group": "Soul Link · group %s · attempt #%s",
 	"soullink.stats.summary": "Running for %s · record %s · group deaths: %s",
@@ -24,7 +21,6 @@
 	"soullink.stats.mobs.one": "1 mob",
 	"soullink.stats.mobs.many": "%s mobs",
 	"soullink.stats.reset": "Soul Link stats were reset",
-
 	"soullink.group.invalid": "\"%s\" can't be a group name: up to 16 letters (no accents), numbers, - or _",
 	"soullink.group.unknown": "There's no group %s: see them with /soullink groups",
 	"soullink.groups.title": "Linked groups",
@@ -40,7 +36,6 @@
 	"soullink.group.moved.many": "%s are now in group %s",
 	"soullink.group.removed.one": "%s no longer has a group",
 	"soullink.group.removed.many": "%s no longer have a group",
-
 	"soullink.config.reloaded": "Config reloaded",
 	"soullink.config.reloaded_warnings": "Config reloaded (%s warnings)",
 	"soullink.config.kept": "Still using the previous config",
@@ -50,17 +45,42 @@
 	"soullink.config.sidebar": "barraLateral doesn't know %s (available: %s): using %s",
 	"soullink.config.scare": "corazonesDeSusto must be a number from 0 to 10 (it says %s): using %s",
 	"soullink.config.language": "idioma doesn't know %s (available: %s): using %s",
-
 	"soullink.swap.nobody": "Nobody from your group is online: use /swap <player>",
 	"soullink.swap.ambiguous": "There are several players in your group: use /swap <player>",
 	"soullink.swap.self": "You can't swap places with yourself",
 	"soullink.swap.dead": "You can't swap places while one of you is dead",
 	"soullink.swap.done": "You swapped places with %s",
 	"soullink.swap.done_other": "%s swapped places with you",
-
 	"soullink.chest.one": "[Soul Link] Your items from before the mod was installed are in the chest at %s.",
 	"soullink.chest.many": "[Soul Link] Your items from before the mod was installed are in the chests at %s.",
 	"soullink.chest.and": " and ",
 	"soullink.chest.overflow": "[Soul Link] Whatever didn't fit was dropped at your feet.",
-	"soullink.chest.none": "[Soul Link] Your items from before the mod was installed were dropped at your feet (there was no room for a chest)."
+	"soullink.chest.none": "[Soul Link] Your items from before the mod was installed were dropped at your feet (there was no room for a chest).",
+	"soullink.config.pantalla.titulo": "Soul Link settings",
+	"soullink.config.pantalla.guardar": "Save",
+	"soullink.config.pantalla.servidor_remoto": "You're connected to a server: this changes %s on this installation, not the server's.",
+	"soullink.config.pantalla.no_se_leyo": "Couldn't read %s: %s",
+	"soullink.config.pantalla.no_se_escribio": "Couldn't write %s: %s",
+	"soullink.config.pantalla.no_se_guardo": "Not saved, the file was left as it was:",
+	"soullink.config.pantalla.en_el_archivo": "(edit in the file)",
+	"soullink.config.pantalla.entero": "A whole number",
+	"soullink.config.pantalla.decimal": "A number (decimals allowed)",
+	"soullink.config.campo.compartirExperiencia": "Share experience",
+	"soullink.config.ayuda.compartirExperiencia": "Off: everyone has their own. When turned back on, everyone takes the stored shared experience and loses what they gathered separately",
+	"soullink.config.campo.anunciarMuertes": "Announce deaths",
+	"soullink.config.ayuda.anunciarMuertes": "The chat message when the group dies",
+	"soullink.config.campo.barraLateral": "Sidebar",
+	"soullink.config.ayuda.barraLateral": "Which group stat to show on the right of the screen. If the sidebar already shows something else (a datapack), it's left alone",
+	"soullink.config.campo.corazonesDeSusto": "Hearts for a close call",
+	"soullink.config.ayuda.corazonesDeSusto": "From how many hearts of health a hit counts as a close call, 0 to 10. 0 doesn't count them",
+	"soullink.config.campo.idioma": "Language",
+	"soullink.config.ayuda.idioma": "The console's, the sidebar titles' and the one for players whose language the mod doesn't have",
+	"soullink.config.valor.ninguna": "None",
+	"soullink.config.valor.culpas": "Deaths caused",
+	"soullink.config.valor.corazones": "Hearts lost",
+	"soullink.config.valor.sustos": "Close calls",
+	"soullink.config.valor.experiencia": "Experience gathered",
+	"soullink.config.valor.mobs": "Mobs killed",
+	"soullink.config.valor.en_us": "English",
+	"soullink.config.valor.es_ar": "Español"
 }

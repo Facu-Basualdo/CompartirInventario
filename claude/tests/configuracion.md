@@ -32,3 +32,4 @@ El test grande usa `/swap` y `/soullink group` en un paso cada uno, para cubrir 
 - [Configuración (mod)](../mod/configuracion.md)
 - [Inventario compartido](inventario-compartido.md): el test grande, donde están las aserciones de estadísticas.
 - [Idioma (mod)](../mod/idioma.md)
+- [Tests de la pantalla de configuración](pantalla-de-configuracion.md)

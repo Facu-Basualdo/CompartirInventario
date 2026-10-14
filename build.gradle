@@ -6,12 +6,28 @@ repositories {
 	// Add repositories to retrieve artifacts from in here.
 	// You should only use this when depending on other mods because
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+	exclusiveContent {
+		forRepository {
+			maven {
+				name = "Modrinth"
+				url = "https://api.modrinth.com/maven"
+			}
+		}
+		filter {
+			includeGroup "maven.modrinth"
+		}
+	}
 }
 
 loom {
+	// src/client: sólo la pantalla de configuración de Mod Menu. Así src/main no puede usar por error una clase de
+	// net.minecraft.client, que en un servidor dedicado no está
+	splitEnvironmentSourceSets()
+
 	mods {
 		"soullink" {
 			sourceSet sourceSets.main
+			sourceSet sourceSets.client
 		}
 	}
 
@@ -33,6 +49,9 @@ dependencies {
 
 	// Fabric API
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// Mod Menu es opcional: sólo para compilar ModMenuIntegration, que Mod Menu carga si está instalado
+	compileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
 }
 
 processResources {
@@ -60,13 +79,23 @@ java {
 	targetCompatibility = JavaVersion.VERSION_25
 }
 
-// Pruebas automáticas dentro del juego (src/gametest): gradlew runGameTest
+// Pruebas automáticas dentro del juego (src/gametest): gradlew runGameTest (servidor sin ventana) y
+// gradlew runClientGameTest (abre un cliente de verdad para probar la pantalla de configuración)
 fabricApi {
 	configureTests {
 		createSourceSet = true
 		modId = "soullink-test"
 		enableGameTests = true
-		enableClientGameTests = false
+		enableClientGameTests = true
 		eula = true
+	}
+}
+
+// El cliente de prueba guarda su config en build/run/clientGameTest y no la pisa: la prueba de la pantalla de
+// configuración le cambia valores, y la corrida siguiente tiene que arrancar con los por defecto
+def configDelClienteDePrueba = layout.buildDirectory.dir("run/clientGameTest/config")
+tasks.matching { it.name == "runClientGameTest" }.configureEach {
+	doFirst {
+		configDelClienteDePrueba.get().asFile.deleteDir()
 	}
 }

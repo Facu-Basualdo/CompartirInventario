@@ -18,6 +18,9 @@
 	"entrypoints": {
 		"main": [
 			"com.soullink.SoulLink"
+		],
+		"modmenu": [
+			"com.soullink.client.ModMenuIntegration"
 		]
 	},
 	"mixins": [

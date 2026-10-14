@@ -11,6 +11,9 @@
 			"com.soullink.test.ConfigGameTest",
 			"com.soullink.test.OldSaveGameTest",
 			"com.soullink.test.LangGameTest"
+		],
+		"fabric-client-gametest": [
+			"com.soullink.test.ConfigScreenClientGameTest"
 		]
 	},
 	"depends": {

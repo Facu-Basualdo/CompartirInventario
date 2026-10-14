@@ -1,6 +1,6 @@
 # Soul Link — mod de Minecraft
 
-Mod de Fabric para **Minecraft Java 26.3** que hace que los jugadores vinculados compartan en tiempo real un único inventario (inventario, barra rápida, armadura y mano secundaria), una sola barra de hambre, una sola barra de vida y una sola barra de experiencia. Por defecto todos están vinculados; con `/soullink grupo` se arman grupos separados (2 y 2, o como se quiera), y cada grupo comparte lo suyo. Java 25, Gradle 9.7 + Fabric Loom 1.18, Fabric Loader 0.19.5, Fabric API 0.162.0+26.3. Toda la lógica corre en el servidor.
+Mod de Fabric para **Minecraft Java 26.3** que hace que los jugadores vinculados compartan en tiempo real un único inventario (inventario, barra rápida, armadura y mano secundaria), una sola barra de hambre, una sola barra de vida y una sola barra de experiencia. Por defecto todos están vinculados; con `/soullink grupo` se arman grupos separados (2 y 2, o como se quiera), y cada grupo comparte lo suyo. Java 25, Gradle 9.7 + Fabric Loom 1.18, Fabric Loader 0.19.5, Fabric API 0.162.0+26.3. Toda la lógica corre en el servidor; `src/client` es sólo la pantalla de configuración de Mod Menu, opcional.
 
 **El id del mod es `soullink` desde la 2.0.0 (antes `inventariocompartido`).** Lo guardado con el id viejo se pasa solo al arrancar: ver [migración del id](claude/mod/migracion-de-id.md). No lo vuelvas a cambiar sin una migración, y no renombres la marca `InventarioCompartido` del archivo de cada jugador.
 
@@ -48,6 +48,7 @@ El mismo tema en distintas áreas usa el mismo nombre de archivo (`claude/mod/in
 | Idioma de los mensajes (`Lang`, comandos en inglés) | [idioma](claude/mod/idioma.md) | [configuracion](claude/tests/configuracion.md) |
 | Configuración (`config/soullink.json`) | [configuracion](claude/mod/configuracion.md) | [configuracion](claude/tests/configuracion.md) |
 | Intercambiar lugar (`/intercambiar`) | [intercambiar-lugar](claude/mod/intercambiar-lugar.md) | [inventario-compartido](claude/tests/inventario-compartido.md) · [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
+| Pantalla de configuración con Mod Menu, opcional (3.2.0) | [pantalla-de-configuracion](claude/mod/pantalla-de-configuracion.md) | [pantalla-de-configuracion](claude/tests/pantalla-de-configuracion.md) |
 
 ## Reglas de workflow
 

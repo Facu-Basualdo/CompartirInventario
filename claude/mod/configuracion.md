@@ -22,9 +22,11 @@ Para ofrecerlo habría que dejar de escribir la marca mientras está apagado y r
 |---|---|---|---|
 | `compartirExperiencia` | bool | `true` | `SharedExperience.sync` y `shouldDropExperience` |
 | `anunciarMuertes` | bool | `true` | `SharedVitals.recordGroupDeath` |
-| `barraLateral` | `culpas` · `corazones` · `sustos` · `experiencia` · `mobs` · `ninguna` | `culpas` | `StatsScoreboard.applySidebar` |
+| `barraLateral` | `culpas` · `corazones` · `sustos` · `experiencia` · `mobs` · `ninguna` | `ninguna` | `StatsScoreboard.applySidebar` |
 | `corazonesDeSusto` | número de 0 a 10 | `2` | `SharedVitals.syncHealth` |
 | `idioma` | `en_us` · `es_ar` | `en_us` | `Lang`: la consola, los títulos del scoreboard y los clientes con un idioma que no tenemos (ver [idioma](idioma.md)) |
+
+**`barraLateral` arranca en `ninguna` desde la 3.2.0** (antes `culpas`): la barra a la vista todo el tiempo molestaba a quien no la buscaba. Cambiar `DEFAULT` no toca un archivo que ya existe, que sigue con lo que tenga escrito; sólo los archivos nuevos arrancan sin barra.
 
 Las claves están en español y en camelCase, como en Hero's Forge, Bloodmoon y Mythic Loot. Los ids de `barraLateral` son los de `GroupStats.Stat`, y el nombre del objetivo del scoreboard sale de ahí mismo (`soullink_<id>`).
 
@@ -56,3 +58,4 @@ Con `compartirExperiencia: false`:
 - [Inventario compartido](inventario-compartido.md): por qué el reparto por referencia no se puede apagar en caliente.
 - [Tests: configuración](../tests/configuracion.md)
 - [Idioma](idioma.md): cómo se elige el idioma de cada mensaje.
+- [Pantalla de configuración](pantalla-de-configuracion.md): editar este archivo desde Mod Menu.

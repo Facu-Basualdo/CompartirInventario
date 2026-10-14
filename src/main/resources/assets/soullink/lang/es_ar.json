@@ -1,16 +1,13 @@
 {
 	"modmenu.descriptionTranslation.soullink": "Los jugadores vinculados comparten un único inventario (inventario, barra rápida, armadura y mano secundaria), el hambre, la vida y la experiencia en tiempo real. Podés vincular a todos o armar grupos (2 y 2, o como quieras). Cuenta los intentos y de quién fue la culpa de cada muerte (/soullink).",
-
 	"soullink.stat.culpas": "Culpas",
 	"soullink.stat.corazones": "Corazones perdidos",
 	"soullink.stat.sustos": "Sustos",
 	"soullink.stat.experiencia": "Experiencia juntada",
 	"soullink.stat.mobs": "Mobs matados",
-
 	"soullink.death.announce": "☠ Terminó el intento #%s después de %s. Culpa de %s",
 	"soullink.death.announce_group": "☠ Grupo %s: terminó el intento #%s después de %s. Culpa de %s",
 	"soullink.death.record": " (récord: %s)",
-
 	"soullink.stats.title": "Soul Link · intento #%s",
 	"soullink.stats.title_group": "Soul Link · grupo %s · intento #%s",
 	"soullink.stats.summary": "Lleva %s · récord %s · muertes del grupo: %s",
@@ -24,7 +21,6 @@
 	"soullink.stats.mobs.one": "1 mob",
 	"soullink.stats.mobs.many": "%s mobs",
 	"soullink.stats.reset": "Las estadísticas de Soul Link volvieron a cero",
-
 	"soullink.group.invalid": "\"%s\" no sirve como nombre de grupo: hasta 16 letras sin tildes, números, - o _",
 	"soullink.group.unknown": "No hay ningún grupo %s: mirá los que hay con /soullink grupos",
 	"soullink.groups.title": "Grupos vinculados",
@@ -40,7 +36,6 @@
 	"soullink.group.moved.many": "%s ahora están en el grupo %s",
 	"soullink.group.removed.one": "%s ya no tiene grupo",
 	"soullink.group.removed.many": "%s ya no tienen grupo",
-
 	"soullink.config.reloaded": "Config recargada",
 	"soullink.config.reloaded_warnings": "Config recargada (con %s avisos)",
 	"soullink.config.kept": "Se sigue usando la config anterior",
@@ -50,17 +45,42 @@
 	"soullink.config.sidebar": "barraLateral no conoce %s (las que hay: %s): se usa %s",
 	"soullink.config.scare": "corazonesDeSusto tiene que ser un número de 0 a 10 (dice %s): se usa %s",
 	"soullink.config.language": "idioma no conoce %s (los que hay: %s): se usa %s",
-
 	"soullink.swap.nobody": "No hay nadie de tu grupo conectado: usá /intercambiar <jugador>",
 	"soullink.swap.ambiguous": "Hay varios en tu grupo: usá /intercambiar <jugador>",
 	"soullink.swap.self": "No podés intercambiar lugar con vos mismo",
 	"soullink.swap.dead": "No se puede intercambiar lugar mientras alguno de los dos está muerto",
 	"soullink.swap.done": "Intercambiaste lugar con %s",
 	"soullink.swap.done_other": "%s intercambió lugar con vos",
-
 	"soullink.chest.one": "[Soul Link] Tus ítems de antes de instalar el mod están en el cofre de %s.",
 	"soullink.chest.many": "[Soul Link] Tus ítems de antes de instalar el mod están en los cofres de %s.",
 	"soullink.chest.and": " y ",
 	"soullink.chest.overflow": "[Soul Link] Lo que no entró quedó tirado a tus pies.",
-	"soullink.chest.none": "[Soul Link] Tus ítems de antes de instalar el mod quedaron tirados a tus pies (no había lugar para un cofre)."
+	"soullink.chest.none": "[Soul Link] Tus ítems de antes de instalar el mod quedaron tirados a tus pies (no había lugar para un cofre).",
+	"soullink.config.pantalla.titulo": "Configuración de Soul Link",
+	"soullink.config.pantalla.guardar": "Guardar",
+	"soullink.config.pantalla.servidor_remoto": "Estás conectado a un servidor: esto cambia %s de esta instalación, no el del servidor.",
+	"soullink.config.pantalla.no_se_leyo": "No se pudo leer %s: %s",
+	"soullink.config.pantalla.no_se_escribio": "No se pudo escribir %s: %s",
+	"soullink.config.pantalla.no_se_guardo": "No se guardó, el archivo quedó como estaba:",
+	"soullink.config.pantalla.en_el_archivo": "(editalo en el archivo)",
+	"soullink.config.pantalla.entero": "Un número entero",
+	"soullink.config.pantalla.decimal": "Un número (puede tener decimales)",
+	"soullink.config.campo.compartirExperiencia": "Compartir la experiencia",
+	"soullink.config.ayuda.compartirExperiencia": "Con No, cada uno tiene la suya. Al volver a Sí, todos adoptan la compartida que había quedado guardada y pierden la que juntaron por separado",
+	"soullink.config.campo.anunciarMuertes": "Anunciar las muertes",
+	"soullink.config.ayuda.anunciarMuertes": "El mensaje en el chat cuando muere el grupo",
+	"soullink.config.campo.barraLateral": "Barra lateral",
+	"soullink.config.ayuda.barraLateral": "Qué estadística del grupo mostrar a la derecha de la pantalla. Si la barra ya muestra otra cosa (un datapack), no se pisa",
+	"soullink.config.campo.corazonesDeSusto": "Corazones de un susto",
+	"soullink.config.ayuda.corazonesDeSusto": "Desde cuántos corazones de vida un golpe cuenta como susto, de 0 a 10. Con 0 no se cuentan",
+	"soullink.config.campo.idioma": "Idioma",
+	"soullink.config.ayuda.idioma": "El de la consola, los títulos de la barra lateral y los jugadores con un idioma que el mod no tiene",
+	"soullink.config.valor.ninguna": "Ninguna",
+	"soullink.config.valor.culpas": "Culpas",
+	"soullink.config.valor.corazones": "Corazones perdidos",
+	"soullink.config.valor.sustos": "Sustos",
+	"soullink.config.valor.experiencia": "Experiencia juntada",
+	"soullink.config.valor.mobs": "Mobs matados",
+	"soullink.config.valor.en_us": "English",
+	"soullink.config.valor.es_ar": "Español"
 }

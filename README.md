@@ -77,7 +77,7 @@ Cada vez que muere el grupo termina un **intento**. El mod lleva la cuenta de lo
 | Mobs matados | Mobs hostiles que mató |
 
 - **`/soullink`** muestra el intento actual de tu grupo, cuánto lleva, el récord, una línea por jugador y las últimas muertes con su causa. **`/soullink stats <grupo>`** muestra el de otro grupo. Cualquiera puede usarlos.
-- **Barra lateral:** por defecto muestra las culpas. Son objetivos comunes del scoreboard (`soullink_culpas`, `soullink_corazones`, `soullink_sustos`, `soullink_experiencia`, `soullink_mobs`), así que no hace falta nada en el cliente. Si la barra ya muestra otro objetivo (de un datapack, por ejemplo), el mod no la pisa.
+- **Barra lateral:** por defecto no muestra nada. Para ver las culpas (u otra estadística) a la derecha de la pantalla, poné `barraLateral` en la [configuración](#configuración). Son objetivos comunes del scoreboard (`soullink_culpas`, `soullink_corazones`, `soullink_sustos`, `soullink_experiencia`, `soullink_mobs`), así que no hace falta nada en el cliente. Si la barra ya muestra otro objetivo (de un datapack, por ejemplo), el mod no la pisa.
 - **Al morir un grupo** sale en el chat qué grupo era, qué intento terminó, cuánto duró, de quién fue la culpa y el récord.
 - El reloj del intento sólo corre mientras hay alguien jugando.
 - **`/soullink stats reiniciar`** (operadores) pone todo en cero.
@@ -90,7 +90,7 @@ Cada vez que muere el grupo termina un **intento**. El mod lleva la cuenta de lo
 {
   "compartirExperiencia": true,
   "anunciarMuertes": true,
-  "barraLateral": "culpas",
+  "barraLateral": "ninguna",
   "corazonesDeSusto": 2,
   "idioma": "en_us"
 }
@@ -100,11 +100,13 @@ Cada vez que muere el grupo termina un **intento**. El mod lleva la cuenta de lo
 |---|---|
 | `compartirExperiencia` | Con `false`, cada uno tiene su propia experiencia. Al volver a `true`, todos adoptan la compartida que había quedado guardada y pierden la que juntaron por separado |
 | `anunciarMuertes` | El mensaje en el chat cuando muere el grupo |
-| `barraLateral` | Qué estadística mostrar: `culpas`, `corazones`, `sustos`, `experiencia`, `mobs` o `ninguna` |
+| `barraLateral` | Qué estadística mostrar en la barra lateral: `culpas`, `corazones`, `sustos`, `experiencia`, `mobs` o `ninguna` (por defecto) |
 | `corazonesDeSusto` | Desde cuántos corazones un golpe cuenta como susto (de 0 a 10; con 0 no se cuentan) |
 | `idioma` | `en_us` o `es_ar`: el de la consola, los títulos de la barra lateral y los jugadores con un idioma que el mod no tiene. Cada jugador ve los mensajes en el idioma de su juego |
 
 Después de editarlo, **`/soullink recargar`** (operadores) lo aplica sin reiniciar. Un valor mal escrito usa el valor por defecto y avisa en el chat y en el log, sin descartar el resto del archivo.
+
+**Desde el juego, con [Mod Menu](https://modrinth.com/mod/modmenu):** en la lista de mods, el botón de configuración de Soul Link abre una pantalla con estas opciones. Al guardar se aplica enseguida, como con `/soullink recargar`. Si un valor no sirve, no se guarda nada y la pantalla dice por qué. Edita el archivo de tu instalación: sirve en singleplayer, en un mundo abierto en LAN desde tu juego y para preparar la config antes de crear un mundo. El de un servidor dedicado se sigue editando en el servidor.
 
 El inventario, el hambre y la vida no se pueden apagar: se comparten desde que el jugador entra, y cambiarlo con gente adentro duplicaría o borraría ítems.
 
@@ -122,6 +124,10 @@ El inventario, el hambre y la vida no se pueden apagar: se comparten desde que e
 - **Servidor dedicado:** copiá `soullink-<versión>.jar` y Fabric API a la carpeta `mods/` del servidor. Los jugadores no necesitan instalar nada.
 - **Singleplayer o LAN:** instalalo en el cliente del que abre el mundo, junto con Fabric API.
 
+### Actualizar a la 3.2.0
+
+La barra lateral ahora arranca apagada, pero **sólo en un `config/soullink.json` nuevo**: si ya tenías uno, sigue con lo que diga (`culpas`, si nunca lo cambiaste). Para sacarla, poné `"barraLateral": "ninguna"` o elegí *Ninguna* desde Mod Menu.
+
 ### Actualizar a la 3.0.0
 
 No hay que hacer nada: el mundo se lee igual y todos quedan en un solo grupo, como antes, hasta que armes grupos. Si usás Hero's Forge, actualizalo a la 0.14.0 o más nuevo.
@@ -134,12 +140,14 @@ Hasta la 1.2.1 el mod se llamaba **Inventario Compartido** y su id era `inventar
 
 - **Hero's Forge** (0.14.0 o más nuevo): los puntos de estadísticas pasan a ser de cada grupo. Con una versión anterior de Hero's Forge, Soul Link 3.0.0 no arranca: actualizá los dos.
 - **Bloodmoon & Bosses** y **Mythic Loot:** no se tocan.
+- **[Mod Menu](https://modrinth.com/mod/modmenu)** (opcional, en el cliente): la configuración se edita desde el juego. Ver [Configuración](#configuración).
 
 ## Desarrollo
 
 ```bash
 ./gradlew build          # compila y corre las pruebas; el jar queda en build/libs/
 ./gradlew runGameTest    # sólo las pruebas automáticas, en un servidor sin ventana
+./gradlew runClientGameTest   # la pantalla de configuración en un cliente de verdad (abre una ventana)
 ```
 
 Pide Java 25: si Gradle no encuentra tu JDK, agregá `org.gradle.java.installations.paths=<ruta a tu JDK 25>` a tu `~/.gradle/gradle.properties`. La documentación técnica está en [CLAUDE.md](CLAUDE.md).
