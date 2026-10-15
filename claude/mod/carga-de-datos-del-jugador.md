@@ -66,6 +66,10 @@ Dos cofres simples puestos uno al lado del otro no se unen en uno doble: `ChestB
 
 **Limitación:** un mundo que ya usaba el mod antes de que existiera la marca (la versión del primer commit) tiene archivos sin marca con copias del compartido. En ese mundo, el primer login de cada jugador después de actualizar le daría un cofre con una copia, o sea ítems duplicados. Esa versión nunca se publicó.
 
+## Slots de Trinkets
+
+Trinkets carga sus slots dentro de `readAdditionalSaveData` y no hay un método que bloquear: se envuelve todo `Entity.load`, con su propia marca (`SoulLinkTrinkets`) y su propio flag. Ver [trinkets](trinkets.md#la-carga-del-archivo-no-pisa-lo-compartido).
+
 ## `replaceWith()` no se bloquea
 
 `ServerPlayer.restoreFrom` → `transferInventoryXpAndScore` → `Inventory.replaceWith(viejo)` hace `setItem(i, viejo.getItem(i))` para cada slot. Los dos inventarios apuntan a la misma lista, así que es un no-op. Ver [muerte y respawn](muerte-y-respawn.md).

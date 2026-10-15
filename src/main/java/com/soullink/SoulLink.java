@@ -73,6 +73,10 @@ public class SoulLink implements ModInitializer {
 		// En singleplayer se pueden abrir varios mundos en la misma sesión: no arrastrar el estado de uno a otro.
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> SharedInventoryState.clearActive());
 
+		// Con Trinkets Updated se comparten también sus slots (la clase sólo se carga si está instalado)
+		if (FabricLoader.getInstance().isModLoaded("trinkets")) {
+			com.soullink.trinkets.SharedTrinkets.init();
+		}
 		LOGGER.info("Inventario compartido activado");
 	}
 

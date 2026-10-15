@@ -48,6 +48,7 @@ El mismo tema en distintas áreas usa el mismo nombre de archivo (`claude/mod/in
 | Idioma de los mensajes (`Lang`, comandos en inglés) | [idioma](claude/mod/idioma.md) | [configuracion](claude/tests/configuracion.md) |
 | Configuración (`config/soullink.json`) | [configuracion](claude/mod/configuracion.md) | [configuracion](claude/tests/configuracion.md) |
 | Intercambiar lugar (`/intercambiar`) | [intercambiar-lugar](claude/mod/intercambiar-lugar.md) | [inventario-compartido](claude/tests/inventario-compartido.md) · [jugadores-de-prueba](claude/tests/jugadores-de-prueba.md) |
+| Slots de Trinkets compartidos, con Trinkets Updated opcional (3.3.0) | [trinkets](claude/mod/trinkets.md) | [inventario-compartido](claude/tests/inventario-compartido.md) |
 | Pantalla de configuración con Mod Menu, opcional (3.2.0) | [pantalla-de-configuracion](claude/mod/pantalla-de-configuracion.md) | [pantalla-de-configuracion](claude/tests/pantalla-de-configuracion.md) |
 
 ## Reglas de workflow

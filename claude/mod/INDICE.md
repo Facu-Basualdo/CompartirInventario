@@ -11,7 +11,7 @@ Java 25 · Fabric API 0.162.0+26.3 · Mixins sobre Minecraft 26.3 (nombres de Mo
 3. Verificá la firma real del método con `javap` (ver [minecraft-26-sin-ofuscar](../general/minecraft-26-sin-ofuscar.md)) en vez de confiar en tutoriales o en memoria.
 4. Corré `gradlew runGameTest`.
 
-No lances agentes de exploración sobre el código del mod: son 29 clases y todo lo que no dicen está en estas notas.
+No lances agentes de exploración sobre el código del mod: son 37 clases y todo lo que no dicen está en estas notas.
 
 ## Fundamentos
 
@@ -20,6 +20,12 @@ No lances agentes de exploración sobre el código del mod: son 29 clases y todo
 | [Inventario compartido](inventario-compartido.md) | Los jugadores comparten **la misma instancia** de `NonNullList` y del `EnumMap` de equipment, no copias · se asignan en el `<init>` de `Inventory` sólo para `ServerPlayer` · no hay código de red: el sync de menús de vanilla ya manda los slots cambiados · el mod sólo lo adelanta (`broadcastChanges()` de los demás al volver de 14 handlers de paquetes y en `END_SERVER_TICK`): sin eso tardaba hasta 1 tick · `require = 14`: si agregás un handler, subí el número · a quien está picando no se le manda el slot de su mano hasta que termina (`AbstractContainerMenuMixin`): el cliente de vanilla reinicia el progreso si la herramienta pierde durabilidad · slot seleccionado, cursor y ender chest siguen siendo por jugador |
 | [Experiencia](experiencia.md) | Son campos primitivos: se reparte por deltas **en puntos** en `END_SERVER_TICK`, después de la vida · vanilla sólo reenvía la barra si cambia `totalExperience`: hay que poner `lastSentExp = -1` (encantar no lo cambia) · quien entra o reaparece adopta; suma la suya sólo el primero con el mod recién instalado y quien trae un archivo de antes del mod · al morir el grupo, `getBaseExperienceReward` da 0 a todos menos al primero que muere en el tick · se pierde al morir salvo con `keepInventory` |
 | [Vida y hambre](vida-y-hambre.md) | El hambre es un solo `FoodData` por referencia, pero la vida **no**: se reparte sumando deltas en `END_SERVER_TICK` (hasta 1 tick de demora) · `FoodData.tick()` se corta a una vez por tick o la regeneración va al doble · quien entra o reaparece **adopta** la vida, no la aporta · creativo/espectador no participan |
+
+## Integraciones
+
+| Nota | De qué trata |
+|---|---|
+| [Trinkets compartidos](trinkets.md) | Con Trinkets Updated (opcional: `compileOnly` + `TrinketsMixinPlugin`) sus slots se comparten como la armadura: cada `TrinketInventoryImpl` apunta a las `TrinketSlotLists` del grupo · se engancha en el `<init>` y `update()` del inventario y al final del constructor de `ServerPlayer` (en el de `LivingEntity` el perfil es null) · `Entity.load` envuelto: Trinkets lee o **vacía** los slots dentro de `readAdditionalSaveData` · marca propia `SoulLinkTrinkets` y flag `trinketsInitialized` (se puede activar en un mundo viejo) · al cambiar de grupo el nuevo arranca vacío si las listas eran de otro |
 
 ## Datos
 

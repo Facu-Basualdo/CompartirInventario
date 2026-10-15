@@ -52,6 +52,9 @@ dependencies {
 
 	// Mod Menu es opcional: sólo para compilar ModMenuIntegration, que Mod Menu carga si está instalado
 	compileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
+
+	// Trinkets Updated es opcional: con él se comparten también sus slots (com.soullink.trinkets). Las pruebas corren con él.
+	compileOnly "maven.modrinth:trinkets-updated:${project.trinkets_version}"
 }
 
 processResources {
@@ -89,6 +92,11 @@ fabricApi {
 		enableClientGameTests = true
 		eula = true
 	}
+}
+
+// Las pruebas corren con Trinkets Updated para probar que sus slots también se comparten
+dependencies {
+	gametestImplementation "maven.modrinth:trinkets-updated:${project.trinkets_version}"
 }
 
 // El cliente de prueba guarda su config en build/run/clientGameTest y no la pisa: la prueba de la pantalla de

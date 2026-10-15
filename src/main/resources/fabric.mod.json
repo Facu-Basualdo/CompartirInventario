@@ -24,8 +24,12 @@
 		]
 	},
 	"mixins": [
-		"soullink.mixins.json"
+		"soullink.mixins.json",
+		"soullink.trinkets.mixins.json"
 	],
+	"suggests": {
+		"trinkets": "*"
+	},
 	"breaks": {
 		"herosforge": "<0.14.0"
 	},

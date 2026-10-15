@@ -4,7 +4,7 @@
 
 Mod de Fabric para **Minecraft Java 26.3** en el que los jugadores vinculados comparten, en tiempo real:
 
-- **un solo inventario**: inventario, barra rápida, armadura y mano secundaria;
+- **un solo inventario**: inventario, barra rápida, armadura y mano secundaria (y los slots de Trinkets, si está instalado);
 - **una sola barra de hambre**;
 - **una sola barra de vida**;
 - **una sola barra de experiencia**.
@@ -140,6 +140,7 @@ Hasta la 1.2.1 el mod se llamaba **Inventario Compartido** y su id era `inventar
 
 - **Hero's Forge** (0.14.0 o más nuevo): los puntos de estadísticas pasan a ser de cada grupo. Con una versión anterior de Hero's Forge, Soul Link 3.0.0 no arranca: actualizá los dos.
 - **Bloodmoon & Bosses** y **Mythic Loot:** no se tocan.
+- **[Trinkets Updated](https://modrinth.com/mod/trinkets-updated)** (opcional, desde la 3.3.0): sus slots (espalda, anillos, collar…) también se comparten dentro del grupo, como la armadura. La primera vez, el primero que entra aporta los suyos y a los demás se les devuelven en el cofre, como el inventario. Sin Trinkets no cambia nada.
 - **[Mod Menu](https://modrinth.com/mod/modmenu)** (opcional, en el cliente): la configuración se edita desde el juego. Ver [Configuración](#configuración).
 
 ## Desarrollo

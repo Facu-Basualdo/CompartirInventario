@@ -1,0 +1,19 @@
+{
+	"required": true,
+	"package": "com.soullink.mixin.trinkets",
+	"plugin": "com.soullink.mixin.trinkets.TrinketsMixinPlugin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"TrinketInventoryAccessor",
+		"TrinketInventoryImplMixin",
+		"TrinketsLoadMixin",
+		"TrinketsSaveMixin",
+		"TrinketsServerPlayerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

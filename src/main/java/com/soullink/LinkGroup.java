@@ -3,6 +3,7 @@ package com.soullink;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -59,9 +60,10 @@ public final class LinkGroup {
 			FOOD_CODEC.optionalFieldOf("food").forGetter(group -> Optional.of(group.foodData)),
 			Codec.FLOAT.optionalFieldOf("health", UNKNOWN_HEALTH).forGetter(group -> group.health),
 			Codec.DOUBLE.optionalFieldOf("experience", UNKNOWN_EXPERIENCE).forGetter(group -> group.experiencePoints),
-			Codec.INT.optionalFieldOf("experienceScore", 0).forGetter(group -> group.experienceScore)
-	).apply(instance, (items, equipment, food, health, experience, experienceScore) -> new LinkGroup(
-			items, equipment.orElseGet(EntityEquipment::new), food.orElseGet(FoodData::new), health, experience, experienceScore)));
+			Codec.INT.optionalFieldOf("experienceScore", 0).forGetter(group -> group.experienceScore),
+			Codec.unboundedMap(Codec.STRING, TrinketSlotLists.CODEC).optionalFieldOf("trinkets", Map.of()).forGetter(group -> group.trinkets)
+	).apply(instance, (items, equipment, food, health, experience, experienceScore, trinkets) -> new LinkGroup(
+			items, equipment.orElseGet(EntityEquipment::new), food.orElseGet(FoodData::new), health, experience, experienceScore, trinkets)));
 
 	static final Codec<LinkGroup> CODEC = MAP_CODEC.codec();
 
@@ -71,6 +73,8 @@ public final class LinkGroup {
 	private float health;
 	private double experiencePoints;
 	private int experienceScore;
+	// Slots de Trinkets compartidos, por id del slot ("chest/back"). Vacío si Trinkets no está instalado.
+	private final Map<String, TrinketSlotLists> trinkets = new LinkedHashMap<>();
 
 	// Vida de cada jugador justo después del último reparto. No se guarda: es por objeto ServerPlayer,
 	// y un jugador recién creado (login, respawn, cambio de grupo) no está acá hasta que adopta la vida del grupo.
@@ -82,7 +86,7 @@ public final class LinkGroup {
 	private @Nullable ServerPlayer deathDropper;
 
 	private LinkGroup(List<ItemStackWithSlot> items, EntityEquipment equipment, FoodData foodData, float health, double experiencePoints,
-			int experienceScore) {
+			int experienceScore, Map<String, TrinketSlotLists> trinkets) {
 		for (ItemStackWithSlot item : items) {
 			if (item.isValidInContainer(this.items.size())) {
 				this.items.set(item.slot(), item.stack());
@@ -93,6 +97,7 @@ public final class LinkGroup {
 		this.health = health;
 		this.experiencePoints = experiencePoints;
 		this.experienceScore = experienceScore;
+		this.trinkets.putAll(trinkets);
 	}
 
 	/**
@@ -101,7 +106,7 @@ public final class LinkGroup {
 	 * la duplicaría.
 	 */
 	static LinkGroup create(boolean firstGroup) {
-		return new LinkGroup(List.of(), new EntityEquipment(), new FoodData(), UNKNOWN_HEALTH, firstGroup ? UNKNOWN_EXPERIENCE : 0, 0);
+		return new LinkGroup(List.of(), new EntityEquipment(), new FoodData(), UNKNOWN_HEALTH, firstGroup ? UNKNOWN_EXPERIENCE : 0, 0, Map.of());
 	}
 
 	public NonNullList<ItemStack> items() {
@@ -110,6 +115,25 @@ public final class LinkGroup {
 
 	public EnumMap<EquipmentSlot, ItemStack> equipmentItems() {
 		return ((EntityEquipmentAccessor) this.equipment).soullink$getItems();
+	}
+
+	/** Las listas compartidas del slot de Trinkets con ese id, o null si nadie del grupo lo usó todavía. */
+	public @Nullable TrinketSlotLists trinketSlot(String id) {
+		return this.trinkets.get(id);
+	}
+
+	public void putTrinketSlot(String id, TrinketSlotLists lists) {
+		this.trinkets.put(id, lists);
+	}
+
+	/** Si {@code list} es una de las listas de Trinkets de este grupo. */
+	public boolean ownsTrinketList(Object list) {
+		for (TrinketSlotLists lists : this.trinkets.values()) {
+			if (lists.stacks() == list || lists.cosmetic() == list) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public FoodData foodData() {

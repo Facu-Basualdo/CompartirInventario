@@ -14,6 +14,7 @@ Extiende `SavedData` y se obtiene con `server.getDataStorage().computeIfAbsent(T
 | `groups` | Los demás grupos, por id, con `LinkGroup.CODEC` |
 | `members` | UUID → grupo y último nombre. Sólo los que tienen grupo asignado: el resto está en el general |
 | `initialized` | Del mundo, no de cada grupo |
+| `trinketsInitialized` | Como `initialized`, para los slots de Trinkets (ver [trinkets](trinkets.md)) |
 
 `OldSaveGameTest` decodifica un archivo con el formato de la 2.1.0 y verifica que todo queda en el general.
 
@@ -27,6 +28,7 @@ Cada `LinkGroup` tiene estos campos:
 | `health` | `Codec.FLOAT` | `-1` (`UNKNOWN_HEALTH`) = nadie la fijó o murió el grupo. Ver [vida y hambre](vida-y-hambre.md). |
 | `experience` | `Codec.DOUBLE` | En **puntos**, no niveles. `-1` (`UNKNOWN_EXPERIENCE`) = mod recién instalado; el primero que entra aporta la suya. Ver [experiencia](experiencia.md). |
 | `experienceScore` | `Codec.INT` | El `totalExperience` compartido (puntaje de la pantalla de muerte). |
+| `trinkets` | `Codec.unboundedMap(STRING, TrinketSlotLists.CODEC)` | Slots de Trinkets por id (`"chest/back"`): tamaño, ítems y cosméticos. Vacío sin Trinkets. Ver [trinkets](trinkets.md). |
 
 Las estadísticas van en otro archivo, `data/soullink/stats.dat`, con su propio `SavedData` (`GroupStats`): ver [estadísticas](estadisticas.md#persistencia).
 

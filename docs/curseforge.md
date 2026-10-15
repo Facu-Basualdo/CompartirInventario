@@ -2,7 +2,7 @@
 
 Linked players share, in real time:
 
-- **one inventory**: inventory, hotbar, armor and offhand;
+- **one inventory**: inventory, hotbar, armor and offhand (and Trinkets slots, if installed);
 - **one hunger bar**;
 - **one health bar**;
 - **one experience bar**.
@@ -17,6 +17,7 @@ By default everyone on the server is linked. With **`/soullink group`** you can 
 |---|---|---|
 | Inventory and hotbar | ✅ | Selected hotbar slot |
 | Armor and offhand | ✅ | |
+| Trinkets slots (with Trinkets Updated) | ✅ | |
 | Hunger and saturation | ✅ | |
 | Health | ✅ | Absorption (yellow) hearts |
 | Experience (levels and points) | ✅ (can be turned off) | |
@@ -92,6 +93,7 @@ Requires **Minecraft 26.3**, **Fabric Loader 0.19.5+**, **[Fabric API](https://w
 ## Works well with
 
 - **Hero's Forge** (0.14.0 or newer): stat points belong to each linked group. With an older Hero's Forge, Soul Link 3 won't start: update both.
+- **Trinkets Updated** (optional, 3.3.0+): its slots (back, rings, necklace…) are shared within the group too, just like armor. Without it nothing changes.
 - **Bloodmoon & Bosses** and **Mythic Loot**: no conflicts. Mythic Loot's healing affixes heal the whole group.
 
 License: MIT. Feel free to use it in modpacks.

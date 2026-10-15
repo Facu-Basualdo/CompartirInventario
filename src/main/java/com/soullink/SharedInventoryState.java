@@ -50,7 +50,8 @@ public class SharedInventoryState extends SavedData {
 			LinkGroup.MAP_CODEC.forGetter(state -> state.groups.get(GENERAL)),
 			Codec.BOOL.optionalFieldOf("initialized", false).forGetter(state -> state.initialized),
 			Codec.unboundedMap(Codec.STRING, LinkGroup.CODEC).optionalFieldOf("groups", Map.of()).forGetter(SharedInventoryState::otherGroups),
-			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Member.CODEC).optionalFieldOf("members", Map.of()).forGetter(state -> state.members)
+			Codec.unboundedMap(UUIDUtil.STRING_CODEC, Member.CODEC).optionalFieldOf("members", Map.of()).forGetter(state -> state.members),
+			Codec.BOOL.optionalFieldOf("trinketsInitialized", false).forGetter(state -> state.trinketsInitialized)
 	).apply(instance, SharedInventoryState::new));
 
 	// DataFixTypes null: Fabric API se encarga de que no se intente aplicar data fixers a datos de mods.
@@ -64,6 +65,8 @@ public class SharedInventoryState extends SavedData {
 	private final Map<String, LinkGroup> groups = new LinkedHashMap<>();
 	private final Map<UUID, Member> members = new HashMap<>();
 	private boolean initialized;
+	// Como initialized, pero para los slots de Trinkets: puede activarse en un mundo que ya usaba el mod (ver SharedTrinkets).
+	private boolean trinketsInitialized;
 
 	// Jugadores que entraron con un archivo de antes del mod: su experiencia se suma a la de su grupo en vez
 	// de perderse. Como los ítems rescatados, vive en memoria entre la carga del archivo y el primer tick.
@@ -74,10 +77,11 @@ public class SharedInventoryState extends SavedData {
 	private final Map<UUID, List<ItemStack>> rescuedItems = new HashMap<>();
 
 	private SharedInventoryState() {
-		this(LinkGroup.create(true), false, Map.of(), Map.of());
+		this(LinkGroup.create(true), false, Map.of(), Map.of(), false);
 	}
 
-	private SharedInventoryState(LinkGroup general, boolean initialized, Map<String, LinkGroup> others, Map<UUID, Member> members) {
+	private SharedInventoryState(LinkGroup general, boolean initialized, Map<String, LinkGroup> others, Map<UUID, Member> members,
+			boolean trinketsInitialized) {
 		this.groups.put(GENERAL, general);
 		others.forEach((id, group) -> {
 			if (!id.equals(GENERAL)) {
@@ -86,6 +90,7 @@ public class SharedInventoryState extends SavedData {
 		});
 		this.initialized = initialized;
 		this.members.putAll(members);
+		this.trinketsInitialized = trinketsInitialized;
 	}
 
 	public static SharedInventoryState get(MinecraftServer server) {
@@ -198,6 +203,14 @@ public class SharedInventoryState extends SavedData {
 
 	public void markInitialized() {
 		this.initialized = true;
+	}
+
+	public boolean isTrinketsInitialized() {
+		return this.trinketsInitialized;
+	}
+
+	public void markTrinketsInitialized() {
+		this.trinketsInitialized = true;
 	}
 
 	public void addRescuedItems(UUID player, List<ItemStack> items) {

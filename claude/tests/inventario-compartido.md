@@ -55,6 +55,17 @@ Los comandos se corren con `getCommands().performPrefixedCommand(jugador.createC
 
 En la muerte grupal, A es el que más vida pierde (5 contra 4) y B queda lejos para que los drops se distingan. Sin la elección de víctima caerían al lado de B, que queda primero en `PlayerList` porque el respawn agrega a A al final.
 
+## Trinkets, al final
+
+Después de los grupos entran `trinkets-c` y `trinkets-d` (las pruebas corren con Trinkets Updated, `gametestImplementation`; el slot `chest/back` se le asigna al jugador con `src/gametest/resources/data/*/trinkets/entities`, porque Trinkets Updated no asigna ninguno por defecto).
+
+| Paso | Qué verifica | Nota del mod |
+|---|---|---|
+| C se pone una elytra en la espalda | D tiene **el mismo objeto** | [trinkets](../mod/trinkets.md) |
+| Se guarda D, C cambia a un tótem, se carga el guardado en D | El slot sigue con el tótem y no se rescata nada | [trinkets](../mod/trinkets.md#la-carga-del-archivo-no-pisa-lo-compartido) |
+| Se carga el mismo guardado **sin** `SoulLinkTrinkets` | El slot sigue con el tótem y la elytra queda en los ítems rescatados | [trinkets](../mod/trinkets.md#la-carga-del-archivo-no-pisa-lo-compartido) |
+| D pasa a otro grupo | Su espalda está vacía y lo que se pone no le llega a C | [trinkets](../mod/trinkets.md) |
+
 ## Qué NO cubre
 
 - **Dos clientes reales.** La conexión es falsa: el paquete de vida hacia el cliente no se ejercita, y `broadcastChanges` sólo se verifica para tirar un ítem y para el hacha retenida mientras se pica, cambiándole a B el `ContainerSynchronizer` por un `RecordingSynchronizer` que anota los slots que se mandarían. Que el cliente real ya no reinicie el progreso de picar no tiene aserción: sólo se verifica que el slot no salga. Los otros 13 handlers y el broadcast de `END_SERVER_TICK` no tienen aserción. Para eso está [probar con dos jugadores](../general/probar-con-dos-jugadores.md).

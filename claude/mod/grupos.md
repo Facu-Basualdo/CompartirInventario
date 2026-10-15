@@ -71,6 +71,8 @@ Ver [persistencia](persistencia.md). El general va en la raíz de `shared_invent
 
 `com.soullink.api.SoulLinkApi` es lo único pensado para usar desde afuera: `groupOf`, `syncHealth`, `syncExperience`, `ignoreHealthChange` y `onGroupChange`. Hero's Forge la llama por reflexión, sin depender del jar, así que **cambiar un nombre o una firma rompe Hero's Forge en runtime, no al compilar**. Por eso `fabric.mod.json` declara `"breaks": {"herosforge": "<0.14.0"}`: las versiones anteriores tocaban clases internas que ya no existen (`SharedInventoryState.syncedHealth`).
 
+Con Trinkets Updated, `SharedTrinkets` se suscribe a `LinkGroups.onChange` y reengancha los slots de Trinkets del que se mueve (ver [trinkets](trinkets.md)).
+
 ## Ver también
 
 - [Inventario compartido](inventario-compartido.md): el invariante de "mismo objeto", ahora por grupo.
